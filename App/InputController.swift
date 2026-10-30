@@ -83,6 +83,7 @@ final class InputController: IMKInputController {
         (sender as? IMKTextInput)?.overrideKeyboard(withKeyboardNamed: "com.apple.keylayout.US")
         engine.dubeol = ModeState.layout.dubeol
         tapKey = nil
+        TypedText.clear()
         ModeState.activate(app: textClient(sender)?.bundleIdentifier())
     }
 
@@ -99,6 +100,7 @@ final class InputController: IMKInputController {
         guard let event = event else { return false }
         if event.type == .flagsChanged { return handleFlags(event, sender) }
         if event.type != .keyDown { return false }
+        if KeySender.isOurs(event) { return false }   // 우리가 흉내 내 보낸 키는 그대로 통과
 
         if tapKey != nil { tapUsed = true }
 
@@ -112,12 +114,14 @@ final class InputController: IMKInputController {
         let mods = event.modifierFlags.intersection([.command, .control, .option])
         if !mods.isEmpty {
             commit(sender)
+            TypedText.clear()
             return false
         }
 
-        // 영문 모드: 그대로 통과
+        // 영문 모드: 그대로 통과 (글자는 기록만)
         if !ModeState.hangul {
             commit(sender)
+            noteEnglish(event)
             return false
         }
 
@@ -126,6 +130,7 @@ final class InputController: IMKInputController {
                 updateMarked(sender)
                 return true
             }
+            TypedText.dropLast()
             return false
         }
 
@@ -137,6 +142,7 @@ final class InputController: IMKInputController {
         guard let ascii = asciiOf(event) else {
             // 엔터·탭·방향키 등: 조합만 확정하고 키는 앱이 처리
             commit(sender)
+            TypedText.clear()
             return false
         }
 
@@ -215,8 +221,19 @@ final class InputController: IMKInputController {
         return nil
     }
 
+    /// 영문 모드에서 앱으로 흘려보낸 키를 기록 (Backspace는 한 글자 지움, 그 밖의 특수키는 기록 끊음)
+    private func noteEnglish(_ event: NSEvent) {
+        if event.keyCode == Key.delete { TypedText.dropLast(); return }
+        if let s = event.characters, !s.isEmpty, s.unicodeScalars.allSatisfy({ $0.value >= 0x20 && $0.value != 0x7f && $0.value < 0xf700 }) {
+            TypedText.append(s)
+        } else {
+            TypedText.clear()
+        }
+    }
+
     func insert(_ text: String, _ sender: Any!) {
         guard !text.isEmpty else { return }
+        TypedText.append(text)
         textClient(sender)?.insertText(text, replacementRange: NSRange(location: NSNotFound, length: NSNotFound))
     }
 

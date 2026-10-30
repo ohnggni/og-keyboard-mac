@@ -13,7 +13,9 @@ enum HanjaReplace {
     case selection(NSRange)
     /// 커서 앞 글자 (end = 커서 위치, UTF-16)
     case before(end: Int)
-    /// 앱 글자를 못 읽음: 조합 중인 글자만
+    /// 앱 글자를 못 읽음(터미널 등): 입력기 기록 기준으로 Backspace 흉내 + 글자 보내기
+    case keystrokes
+    /// 못 읽고 손쉬운 사용 권한도 없음: 조합 중인 글자만
     case composingOnly
 }
 
@@ -63,15 +65,25 @@ extension InputController {
                     before = client.attributedSubstring(from: NSRange(location: start, length: a - start))?.string
                 }
             }
-            if let b = before {
+            // 앱에서 읽은 글자를 믿을 수 있나: 터미널류가 아니고, 입력기 기록과 끝이 맞을 때
+            let app = client.bundleIdentifier() ?? ""
+            let known = String(TypedText.text.suffix(4))
+            let trustRead = before != nil && !Terminals.bundleIDs.contains(app)
+                && (known.isEmpty || before!.hasSuffix(known))
+            if trustRead, let b = before {
                 replace = .before(end: anchor! + (composing as NSString).length)
                 items = HanjaDict.candidates(before: b + composing, hanja: Dicts.hanja, emoji: Dicts.emoji)
                 commit(sender)   // 조합 글자는 확정해 두고 바꿀 때 범위로 교체
+            } else if KeySender.trusted {
+                commit(sender)   // 확정하면 기록에도 들어감
+                replace = .keystrokes
+                items = HanjaDict.candidates(before: TypedText.text, hanja: Dicts.hanja, emoji: Dicts.emoji)
             } else {
+                KeySender.requestTrust()
                 replace = .composingOnly
                 items = HanjaDict.candidates(before: composing, hanja: Dicts.hanja, emoji: Dicts.emoji)
             }
-            keyLog.info("한자: 앞글자 [\(before ?? "(못 읽음)", privacy: .public)] 조합 [\(composing, privacy: .public)] 후보 \(items.count)")
+            keyLog.info("한자[\(app, privacy: .public)]: 앱글자 [\(before ?? "(못 읽음)", privacy: .public)] 기록 [\(TypedText.text, privacy: .public)] 조합 [\(composing, privacy: .public)] 방식 \(String(describing: replace), privacy: .public) 후보 \(items.count)")
         }
 
         guard !items.isEmpty else {
@@ -152,10 +164,14 @@ extension InputController {
         case .before(let end):
             let n = (e.key as NSString).length
             client.insertText(e.text, replacementRange: NSRange(location: max(0, end - n), length: n))
+        case .keystrokes:
+            KeySender.backspaces(e.key.count)
+            KeySender.type(e.text)
         case .composingOnly:
             _ = engine.flush()
             client.insertText(e.text, replacementRange: notFound)
         }
+        TypedText.clear()
         keyLog.info("한자 선택 \(e.key, privacy: .public) → \(e.text, privacy: .public)")
         closeHanja()
     }
