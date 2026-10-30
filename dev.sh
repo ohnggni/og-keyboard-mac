@@ -33,6 +33,7 @@ swiftc -O -swift-version 5 -target arm64-apple-macos13.0 -module-name $NAME \
   -o "$APP/Contents/MacOS/$NAME"
 cp App/Info.plist "$APP/Contents/"
 cp App/Resources/*.dat "$APP/Contents/Resources/"
+cp -R App/Resources/*.lproj "$APP/Contents/Resources/"
 tiffutil -cathidpicheck App/Resources/icon.png App/Resources/icon@2x.png \
   -out "$APP/Contents/Resources/icon.tiff" >/dev/null 2>&1
 # 고정 서명이 있으면 사용 (임시 서명은 빌드마다 바뀌어 손쉬운 사용 권한이 풀림)

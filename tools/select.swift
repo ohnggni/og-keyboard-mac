@@ -11,7 +11,7 @@ func current() -> String {
 print("4초 안에 사파리 주소창을 클릭해 두세요…"); fflush(stdout)
 Thread.sleep(forTimeInterval: 4)
 let app = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "?"
-let filter = [kTISPropertyInputSourceID as String: "kr.ogapp.inputmethod.OGKeyboard"] as CFDictionary
+let filter = [kTISPropertyInputSourceID as String: "kr.ogapp.inputmethod.OGKeyboard.Hangul"] as CFDictionary
 guard let src = (TISCreateInputSourceList(filter, false)?.takeRetainedValue() as? [TISInputSource])?.first else {
     print("OG키보드 입력 소스를 못 찾음"); exit(1)
 }
