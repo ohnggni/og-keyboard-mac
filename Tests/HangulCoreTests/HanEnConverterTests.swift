@@ -31,4 +31,17 @@ final class HanEnConverterTests: XCTestCase {
         XCTAssertEqual(c.convertWord(typed, log: "jinseok", toKorean: false), "jinseok")
         XCTAssertEqual(c.toKorean("android"), "싱채미")
     }
+
+    func testLogMatchedByContent() {
+        let c = HanEnConverter(layout: Layouts.l390)
+        let typed = c.toKorean("remote")
+        // 기록 순서와 상관없이 내용이 맞는 기록을 쓴다
+        XCTAssertEqual(c.convertWord(typed, logs: ["objects", "remote", "git"], toKorean: false), "remote")
+    }
+
+    func testCapsLockWordToKorean() {
+        let c = HanEnConverter(layout: Layouts.l390)
+        XCTAssertEqual(c.convertWord("MFSKGW", logs: [], toKorean: true), "한글")
+        XCTAssertEqual(c.convertWord("kfX", logs: [], toKorean: true), "값")   // 일부 Shift는 그대로
+    }
 }

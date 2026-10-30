@@ -89,8 +89,10 @@ extension InputController {
         }
 
         let toKorean = chaining ? MistypeChain.toKorean : !HanEnConverter.containsHangul(word)
-        let log = MistypeChain.words < MistypeChain.logs.count ? MistypeChain.logs[MistypeChain.words] : nil
-        let out = conv.convertWord(word, log: log, toKorean: toKorean)
+        // 같은 위치의 기록을 먼저, 그다음 나머지 기록 전체에서 내용이 맞는 것
+        let w = MistypeChain.words
+        let logs = (w < MistypeChain.logs.count ? [MistypeChain.logs[w]] : []) + MistypeChain.logs
+        let out = conv.convertWord(word, logs: logs, toKorean: toKorean)
         let oldRegion = word + sep + tail
         let newRegion = out + sep + tail
 
@@ -109,7 +111,7 @@ extension InputController {
         MistypeChain.words += 1
         MistypeChain.toKorean = toKorean
         MistypeChain.at = now
-        keyLog.info("바로잡기[\(app, privacy: .public)] \(useClient ? "앱" : "키흉내", privacy: .public) [\(word, privacy: .public)] → [\(out, privacy: .public)] 기록 [\(log ?? "", privacy: .public)] 연속 \(MistypeChain.words)")
+        keyLog.info("바로잡기[\(app, privacy: .public)] \(useClient ? "앱" : "키흉내", privacy: .public) [\(word, privacy: .public)] → [\(out, privacy: .public)] 기록 \(logs.count)개 연속 \(MistypeChain.words)")
         if !chaining { switchMode(to: toKorean) }
         else { ModeIndicator.shared.show(hangul: toKorean) }
     }
@@ -129,7 +131,7 @@ extension InputController {
         let logs = KeyLog.newestFirst
         var w = 0
         for k in tokens.indices.reversed() where !(tokens[k].first?.isWhitespace ?? true) {
-            tokens[k] = conv.convertWord(tokens[k], log: w < logs.count ? logs[w] : nil, toKorean: toKorean)
+            tokens[k] = conv.convertWord(tokens[k], logs: (w < logs.count ? [logs[w]] : []) + logs, toKorean: toKorean)
             w += 1
         }
         return tokens.joined()

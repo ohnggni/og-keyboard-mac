@@ -81,10 +81,20 @@ final class HanEnConverter {
         return Int(c.value)
     }
 
-    /// 낱말 하나 바꾸기. 키 기록을 다시 쳐본 결과가 낱말과 같으면 기록한 키를 그대로 쓴다(모아치기 대비)
-    func convertWord(_ word: String, log: String?, toKorean: Bool) -> String {
-        if toKorean { return Self.containsHangul(word) ? word : self.toKorean(word) }
-        if let log = log, !log.isEmpty, self.toKorean(log) == word { return log }
+    /// 낱말 하나 바꾸기. 키 기록 중 다시 쳐본 결과가 이 낱말과 같은 게 있으면 그 키를 그대로 쓴다(모아치기 대비).
+    /// 전부 대문자인 영문 낱말은 Caps Lock이 켜진 채 친 것으로 보고 소문자 키로 한글 변환.
+    func convertWord(_ word: String, logs: [String], toKorean: Bool) -> String {
+        if toKorean {
+            if Self.containsHangul(word) { return word }
+            let letters = word.unicodeScalars.filter { ($0.value >= 0x41 && $0.value <= 0x5a) || ($0.value >= 0x61 && $0.value <= 0x7a) }
+            let allCaps = letters.count >= 2 && letters.allSatisfy { $0.value <= 0x5a }
+            return self.toKorean(allCaps ? word.lowercased() : word)
+        }
+        if let log = logs.first(where: { !$0.isEmpty && self.toKorean($0) == word }) { return log }
         return Self.containsHangul(word) ? toLatin(word) : word
+    }
+
+    func convertWord(_ word: String, log: String?, toKorean: Bool) -> String {
+        convertWord(word, logs: log.map { [$0] } ?? [], toKorean: toKorean)
     }
 }

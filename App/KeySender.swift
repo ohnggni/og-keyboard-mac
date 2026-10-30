@@ -14,12 +14,17 @@ enum TypedText {
 
     static func dropLast() {
         if !text.isEmpty { text.removeLast() }
-        KeyLog.clear()
+        KeyLog.dropCurrent()
     }
 
     static func clear() {
         text = ""
-        KeyLog.clear()
+        KeyLog.endWord()   // 키 기록은 남긴다: 바로잡기가 "다시 쳐서 같은 글자일 때만" 쓰므로 안전
+    }
+
+    /// 클릭: 커서 위치를 모르게 되니 글자 기록만 끊고, 키 기록은 둔다(바로잡기가 내용으로 맞춰 봄)
+    static func clearTextOnly() {
+        text = ""
     }
 
     /// 바로잡기로 끝부분을 바꿨을 때 기록도 맞춘다
@@ -43,7 +48,7 @@ enum KeyLog {
     static func endWord() {
         if !current.isEmpty {
             words.append(current)
-            if words.count > 20 { words.removeFirst() }
+            if words.count > 50 { words.removeFirst() }
         }
         current = ""
     }
