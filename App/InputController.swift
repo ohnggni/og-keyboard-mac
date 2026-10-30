@@ -2,7 +2,7 @@ import Cocoa
 import InputMethodKit
 import os
 
-let log = Logger(subsystem: "kr.ogapp.inputmethod.OGKeyboard", category: "key")
+let keyLog = Logger(subsystem: "kr.ogapp.inputmethod.OGKeyboard", category: "key")
 
 /// 한/영 상태 (1단계: 모든 앱 공통. 앱별 기억은 나중에)
 enum ModeState {
@@ -102,7 +102,7 @@ final class InputController: IMKInputController {
     // MARK: 오른쪽 Option 짧게 = 한/영
 
     private func handleFlags(_ event: NSEvent, _ sender: Any!) -> Bool {
-        log.info("flags keyCode=\(event.keyCode, privacy: .public) raw=0x\(String(event.modifierFlags.rawValue, radix: 16), privacy: .public)")
+        keyLog.info("flags keyCode=\(event.keyCode, privacy: .public) raw=0x\(String(event.modifierFlags.rawValue, radix: 16), privacy: .public)")
         guard event.keyCode == Key.rightOption else {
             if rightOptionDown { rightOptionUsed = true }
             return false
@@ -121,7 +121,7 @@ final class InputController: IMKInputController {
     private func toggleMode(_ sender: Any!) {
         commit(sender)
         ModeState.hangul.toggle()
-        log.info("toggle → \(ModeState.hangul ? "한글" : "영문", privacy: .public)")
+        keyLog.info("toggle → \(ModeState.hangul ? "한글" : "영문", privacy: .public)")
         ModeIndicator.shared.show(hangul: ModeState.hangul)
     }
 
