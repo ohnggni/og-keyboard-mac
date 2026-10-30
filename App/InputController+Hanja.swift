@@ -69,9 +69,8 @@ extension InputController {
             }
             // 앱에서 읽은 글자를 믿을 수 있나: 터미널류가 아니고, 입력기 기록과 끝이 맞을 때
             let app = client.bundleIdentifier() ?? ""
-            let known = String(TypedText.text.suffix(4))
+            // 터미널류가 아니면 앱에서 읽은 글자를 믿는다 (입력기 기록은 선택 변환·붙여넣기 등으로 낡을 수 있음)
             let trustRead = before != nil && !Terminals.contains(app)
-                && (known.isEmpty || before!.hasSuffix(known))
             if trustRead, let b = before {
                 replace = .before(end: anchor! + (composing as NSString).length)
                 items = HanjaDict.candidates(before: b + composing, hanja: Dicts.hanja, emoji: Dicts.emoji)

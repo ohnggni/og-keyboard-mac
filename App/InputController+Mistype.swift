@@ -32,6 +32,7 @@ extension InputController {
             let out = convertTokens(t, conv, toKorean: toKorean)
             client.insertText(out, replacementRange: sel)
             KeyLog.clear()
+            TypedText.clearTextOnly()   // 화면 글자가 바뀌었으니 기록은 더 못 믿음
             MistypeChain.at = nil
             switchMode(to: toKorean)
             keyLog.info("바로잡기 선택 [\(t, privacy: .public)] → [\(out, privacy: .public)]")
@@ -50,8 +51,8 @@ extension InputController {
                 read = client.attributedSubstring(from: NSRange(location: start, length: a - start))?.string
             }
         }
-        let known = String(TypedText.text.suffix(4))
-        let useClient = read != nil && (known.isEmpty || read!.hasSuffix(known))
+        // 터미널류가 아니고 읽혔으면 앱 글자를 믿는다 (입력기 기록은 낡을 수 있음)
+        let useClient = read != nil
 
         commit(sender)   // 조합 글자 확정 (기록에도 들어감)
 

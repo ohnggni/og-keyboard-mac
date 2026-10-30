@@ -121,12 +121,30 @@ enum KeySender {
 
     private static func post(_ e: CGEvent?) {
         guard let e = e else { return }
+        if e.type == .keyDown {
+            pending += 1
+            busyUntil = Date().addingTimeInterval(1)
+        }
         e.setIntegerValueField(.eventSourceUserData, value: marker)
         e.post(tap: .cgSessionEventTap)
     }
 
+    /// 우리가 보낸 키가 아직 도착 중인 동안 (일부 앱은 표시값을 지워서 넘겨줌 → 시간과 키 종류로도 판단)
+    private static var busyUntil = Date.distantPast
+    private static var pending = 0
+
     static func isOurs(_ event: NSEvent) -> Bool {
-        event.cgEvent?.getIntegerValueField(.eventSourceUserData) == marker
+        if event.cgEvent?.getIntegerValueField(.eventSourceUserData) == marker {
+            pending = max(0, pending - 1)
+            return true
+        }
+        guard pending > 0, Date() < busyUntil else { pending = 0; return false }
+        // Backspace(51) 또는 글자를 실어 보낸 키(0번 키에 ASCII가 아닌 글자)
+        let chars = event.characters ?? ""
+        let looksOurs = event.keyCode == 51
+            || (event.keyCode == 0 && !chars.isEmpty && !chars.unicodeScalars.allSatisfy(\.isASCII))
+        if looksOurs { pending -= 1 }
+        return looksOurs
     }
 }
 
