@@ -99,6 +99,7 @@ final class InputController: IMKInputController {
     // MARK: 오른쪽 Option 짧게 = 한/영
 
     private func handleFlags(_ event: NSEvent, _ sender: Any!) -> Bool {
+        NSLog("OGKey flags keyCode=%d flags=0x%llx", Int(event.keyCode), UInt64(event.modifierFlags.rawValue))
         guard event.keyCode == Key.rightOption else {
             if rightOptionDown { rightOptionUsed = true }
             return false
