@@ -17,7 +17,7 @@ echo "▶ 1/5 받아오기"
 git pull --ff-only
 
 echo "▶ 2/5 조합기 테스트"
-swift test 2>&1 | tail -3
+swift test 2>&1 | grep -E "Executed .* tests|error:|failed" | head -5
 
 echo "▶ 3/5 빌드"
 rm -rf "$APP"
