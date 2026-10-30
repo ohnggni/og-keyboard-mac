@@ -84,5 +84,16 @@ enum Terminals {
     static let bundleIDs: Set<String> = [
         "com.googlecode.iterm2", "com.apple.Terminal", "net.kovidgoyal.kitty", "org.alacritty",
         "com.github.wez.wezterm", "com.mitchellh.ghostty", "dev.warp.Warp-Stable", "co.zeit.hyper",
+        "com.karmaa.termix",
     ]
+
+    /// 메뉴에서 직접 지정한 앱 (목록에 없는 터미널용)
+    static var userIDs: Set<String> {
+        get { Set(UserDefaults.standard.stringArray(forKey: "terminalApps") ?? []) }
+        set { UserDefaults.standard.set(Array(newValue).sorted(), forKey: "terminalApps") }
+    }
+
+    static func contains(_ id: String) -> Bool {
+        bundleIDs.contains(id) || userIDs.contains(id)
+    }
 }

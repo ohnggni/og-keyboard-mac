@@ -26,6 +26,7 @@ final class StatusBar: NSObject {
 
     private func makeMenu() -> NSMenu {
         let menu = NSMenu()
+        menu.delegate = self
         let header = NSMenuItem(title: "자판", action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
@@ -43,6 +44,10 @@ final class StatusBar: NSObject {
         let clear = NSMenuItem(title: "앱별 기억 지우기", action: #selector(clearRemember), keyEquivalent: "")
         clear.target = self
         menu.addItem(clear)
+        let term = NSMenuItem(title: "지금 앱을 터미널처럼 다루기", action: #selector(toggleTerminal), keyEquivalent: "")
+        term.target = self
+        term.tag = 2
+        menu.addItem(term)
         menu.addItem(.separator())
         let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let about = NSMenuItem(title: "OG키보드 \(ver)", action: nil, keyEquivalent: "")
@@ -54,6 +59,12 @@ final class StatusBar: NSObject {
     private func refreshChecks(_ menu: NSMenu) {
         for mi in menu.items {
             if mi.tag == 1 { mi.state = ModeState.rememberPerApp ? .on : .off; continue }
+            if mi.tag == 2 {
+                let app = ModeState.currentApp ?? ""
+                mi.isEnabled = !app.isEmpty && !Terminals.bundleIDs.contains(app)
+                mi.state = Terminals.contains(app) ? .on : .off
+                continue
+            }
             guard let id = mi.representedObject as? String else { continue }
             mi.state = id == ModeState.layout.id ? .on : .off
         }
@@ -63,6 +74,14 @@ final class StatusBar: NSObject {
         ModeState.rememberPerApp.toggle()
     }
 
+    @objc private func toggleTerminal() {
+        guard let app = ModeState.currentApp else { return }
+        var ids = Terminals.userIDs
+        if ids.contains(app) { ids.remove(app) } else { ids.insert(app) }
+        Terminals.userIDs = ids
+        update()
+    }
+
     @objc private func clearRemember() {
         ModeState.clearAppModes()
     }
@@ -70,5 +89,11 @@ final class StatusBar: NSObject {
     @objc private func selectLayout(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String else { return }
         ModeState.layout = Layouts.byId(id)
+    }
+}
+
+extension StatusBar: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        refreshChecks(menu)
     }
 }
