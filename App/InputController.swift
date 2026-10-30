@@ -119,6 +119,13 @@ final class InputController: IMKInputController {
             closeHanja()
         }
 
+        // Ctrl+Option+V: 클립보드 기록 (안드판 Ctrl+Alt+V)
+        if event.modifierFlags.intersection([.command, .control, .option, .shift]) == [.control, .option],
+           event.keyCode == 9 {
+            openClipboard(sender)
+            return true
+        }
+
         // Cmd/Ctrl/Option 조합 단축키: 조합 확정 후 앱으로
         let mods = event.modifierFlags.intersection([.command, .control, .option])
         if !mods.isEmpty {

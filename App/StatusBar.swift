@@ -52,6 +52,26 @@ final class StatusBar: NSObject {
         let sc = NSMenuItem(title: "텍스트 단축어…", action: #selector(openShortcuts), keyEquivalent: "")
         sc.target = self
         menu.addItem(sc)
+        let clip = NSMenuItem(title: "클립보드 기록 (Ctrl+Option+V)", action: nil, keyEquivalent: "")
+        let sub = NSMenu()
+        let on = NSMenuItem(title: "기록하기", action: #selector(toggleClip), keyEquivalent: "")
+        on.target = self
+        on.tag = 3
+        sub.addItem(on)
+        sub.addItem(.separator())
+        for (i, (name, _)) in ClipboardHistory.keepOptions.enumerated() {
+            let k = NSMenuItem(title: "보관: \(name)", action: #selector(setClipKeep(_:)), keyEquivalent: "")
+            k.target = self
+            k.tag = 100 + i
+            sub.addItem(k)
+        }
+        sub.addItem(.separator())
+        let wipe = NSMenuItem(title: "기록 지우기", action: #selector(clearClips), keyEquivalent: "")
+        wipe.target = self
+        sub.addItem(wipe)
+        sub.delegate = self
+        clip.submenu = sub
+        menu.addItem(clip)
         menu.addItem(.separator())
         let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let about = NSMenuItem(title: "OG키보드 \(ver)", action: nil, keyEquivalent: "")
@@ -63,6 +83,11 @@ final class StatusBar: NSObject {
     private func refreshChecks(_ menu: NSMenu) {
         for mi in menu.items {
             if mi.tag == 1 { mi.state = ModeState.rememberPerApp ? .on : .off; continue }
+            if mi.tag == 3 { mi.state = ClipboardHistory.shared.enabled ? .on : .off; continue }
+            if mi.tag >= 100 {
+                mi.state = ClipboardHistory.keepOptions[mi.tag - 100].1 == ClipboardHistory.shared.keep ? .on : .off
+                continue
+            }
             if mi.tag == 2 {
                 let app = ModeState.currentApp ?? ""
                 mi.isEnabled = !app.isEmpty && !Terminals.bundleIDs.contains(app)
@@ -76,6 +101,12 @@ final class StatusBar: NSObject {
 
     @objc private func toggleRemember() {
         ModeState.rememberPerApp.toggle()
+    }
+
+    @objc private func toggleClip() { ClipboardHistory.shared.enabled.toggle() }
+    @objc private func clearClips() { ClipboardHistory.shared.clear() }
+    @objc private func setClipKeep(_ sender: NSMenuItem) {
+        ClipboardHistory.shared.keep = ClipboardHistory.keepOptions[sender.tag - 100].1
     }
 
     @objc private func openShortcuts() {

@@ -17,6 +17,8 @@ enum HanjaReplace {
     case keystrokes
     /// 못 읽고 손쉬운 사용 권한도 없음: 조합 중인 글자만
     case composingOnly
+    /// 지우지 않고 커서 자리에 넣기 (클립보드 기록)
+    case insertOnly
 }
 
 struct HanjaSession {
@@ -96,12 +98,19 @@ extension InputController {
         let title = first.template != nil ? "단축어"
             : first.key.count == 1 && first.key.first.map(HanjaDict.isCompatConsonant) == true ? "기호"
             : items.allSatisfy(\.emoji) ? "이모지" : "한자"
+        openCandidates(title: title, items: items, replace: replace, client: client)
+    }
+
+    /// 후보 창 열기 (한자·단축어·클립보드 공통)
+    func openCandidates(title: String, items: [HanjaEntry], replace: HanjaReplace, client: IMKTextInput) {
         var session = HanjaSession(items: items, title: title, replace: replace, caret: caretRect(client))
-        if case .keystrokes = replace {
+        let terminal = Terminals.contains(client.bundleIdentifier() ?? "")
+        if case .keystrokes = replace { session.placeholderClient = client }
+        if case .insertOnly = replace, terminal { session.placeholderClient = client }
+        if session.placeholderClient != nil {
             // iTerm2 등은 조합 글자가 없으면 입력기가 처리한 키(Enter·Space·숫자)도 자기가 또 처리함
             // → 폭 0 글자를 조합 중으로 걸어 키가 새지 않게
             client.setMarkedText("\u{200B}", selectionRange: NSRange(location: 1, length: 0), replacementRange: notFound)
-            session.placeholderClient = client
         }
         hanja = session
         CandidatePanel.shared.onPick = { [weak self] i in self?.pickHanja(i, client) }
@@ -134,6 +143,22 @@ extension InputController {
                 .replacingOccurrences(of: "\n", with: "⏎")
             return HanjaEntry(key: s.trigger, text: preview, meaning: "단축어 \(s.trigger)", emoji: false, template: s.template)
         }
+    }
+
+    /// Ctrl+Option+V: 최근 복사한 것 목록
+    func openClipboard(_ sender: Any!) {
+        guard let client = textClient(sender) else { return }
+        closeHanja()
+        guard ClipboardHistory.shared.enabled else { ModeIndicator.shared.showMark("📋"); return }
+        commit(sender)
+        let items = ClipboardHistory.shared.clips.map { c in
+            HanjaEntry(key: "", text: String(c.text.replacingOccurrences(of: "\n", with: "⏎")
+                                                .replacingOccurrences(of: "\t", with: " ").prefix(60)),
+                       meaning: ClipboardHistory.ago(c.at), emoji: false, insert: c.text)
+        }
+        guard !items.isEmpty else { ModeIndicator.shared.showMark("📋"); return }
+        TypedText.clearTextOnly()
+        openCandidates(title: "클립보드", items: items, replace: .insertOnly, client: client)
     }
 
     // MARK: 키
@@ -181,7 +206,7 @@ extension InputController {
         let e = h.items[index]
         closeHanja()   // 보이지 않는 조합 글자부터 지우고 바꾼다
         // 단축어는 지금 시각·클립보드로 펼치고, {커서}가 있으면 그 자리로 커서를 옮긴다
-        var text = e.text
+        var text = e.insert ?? e.text
         var cursorBack = 0
         if let t = e.template {
             let x = TextShortcuts.expand(t, now: Date(), clipboard: NSPasteboard.general.string(forType: .string))
@@ -199,6 +224,8 @@ extension InputController {
             KeySender.type(text)
         case .composingOnly:
             _ = engine.flush()
+            client.insertText(text, replacementRange: notFound)
+        case .insertOnly:
             client.insertText(text, replacementRange: notFound)
         }
         if cursorBack > 0 { KeySender.arrowLeft(cursorBack) }

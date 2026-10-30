@@ -11,6 +11,8 @@ struct HanjaEntry: Equatable {
     let emoji: Bool
     /// 텍스트 단축어면 펼칠 내용 (그 외엔 nil)
     var template: String? = nil
+    /// 실제로 넣을 글자가 보이는 글자와 다를 때 (클립보드 기록: 보이는 건 줄인 미리보기)
+    var insert: String? = nil
 }
 
 /// 한자 사전 조회. 파일(UTF-8 바이트 순 정렬, 한 줄 = 음\t한자|뜻\t...)을 통째로 올려 이진 탐색.
