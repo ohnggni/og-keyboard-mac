@@ -17,9 +17,6 @@ private enum Key {
     static let rightOption: UInt16 = 61
 }
 
-/// NX_DEVICERALTKEYMASK: 오른쪽 Option이 눌려 있음
-private let rightOptionMask: UInt = 0x40
-
 @objc(OGInputController)
 final class InputController: IMKInputController {
 
@@ -107,7 +104,8 @@ final class InputController: IMKInputController {
             if rightOptionDown { rightOptionUsed = true }
             return false
         }
-        let down = event.modifierFlags.rawValue & rightOptionMask != 0
+        // 입력기로 오는 이벤트엔 좌우 구분 비트가 빠져 있음 → 키 코드(61)로 오른쪽을 구분하고 Option 비트로 누름/뗌 판단
+        let down = event.modifierFlags.contains(.option)
         if down {
             rightOptionDown = true
             rightOptionUsed = false
