@@ -39,42 +39,6 @@
 		<string>Hang</string>
 		<string>Latn</string>
 	</array>
-	<key>ComponentInputModeDict</key>
-	<dict>
-		<key>tsInputModeListKey</key>
-		<dict>
-			<key>kr.ogapp.inputmethod.OGKeyboard.Hangul</key>
-			<dict>
-				<key>TISInputSourceID</key>
-				<string>kr.ogapp.inputmethod.OGKeyboard.Hangul</string>
-				<key>TISIntendedLanguage</key>
-				<string>ko</string>
-				<key>tsInputModeScriptKey</key>
-				<string>smKorean</string>
-				<key>tsInputModeMenuIconFileKey</key>
-				<string>icon.tiff</string>
-				<key>tsInputModeAlternateMenuIconFileKey</key>
-				<string>icon.tiff</string>
-				<key>tsInputModePaletteIconFileKey</key>
-				<string>icon.tiff</string>
-				<key>tsInputModeDefaultStateKey</key>
-				<true/>
-				<key>tsInputModeIsVisibleKey</key>
-				<true/>
-				<key>tsInputModePrimaryInScriptKey</key>
-				<true/>
-				<key>tsInputModeCharacterRepertoireKey</key>
-				<array>
-					<string>Hang</string>
-					<string>Latn</string>
-				</array>
-			</dict>
-		</dict>
-		<key>tsVisibleInputModeOrderedArrayKey</key>
-		<array>
-			<string>kr.ogapp.inputmethod.OGKeyboard.Hangul</string>
-		</array>
-	</dict>
 	<key>tsInputMethodIconFileKey</key>
 	<string>icon.tiff</string>
 	<key>TISIconIsTemplate</key>
