@@ -30,6 +30,8 @@ final class CapsMonitor {
     var onTap: (() -> Void)?
     private var manager: IOHIDManager?
     private var downAt: Date?
+    /// 한글 상태에서 대문자 고정을 켰으면, 풀 때 한글로 돌아간다
+    private var restoreHangul = false
     private let longPress: TimeInterval = 0.4
 
     func start() {
@@ -75,9 +77,20 @@ final class CapsMonitor {
             CapsLock.set(false)        // 짧게: 방금 켜진 대문자 고정을 되돌리고 한/영
             onTap?()
         } else if on {
+            // 길게: 대문자 고정 = 영문 대문자. 한글이었으면 영문으로 바꾸고, 풀 때 한글로 되돌린다
+            if ModeState.hangul {
+                InputController.active?.commit(nil)
+                restoreHangul = true
+                ModeState.hangul = false
+            }
             ModeIndicator.shared.showCaps()
         } else {
-            ModeIndicator.shared.show(hangul: ModeState.hangul)   // 대문자 고정 해제
+            // 대문자 고정 해제: 길게 누르기 전 상태로
+            if restoreHangul {
+                restoreHangul = false
+                ModeState.hangul = true
+            }
+            ModeIndicator.shared.show(hangul: ModeState.hangul)
         }
     }
 
