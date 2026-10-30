@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>ko</string>
+	<key>CFBundleExecutable</key>
+	<string>OGKeyboard</string>
+	<key>CFBundleIdentifier</key>
+	<string>kr.ogapp.inputmethod.OGKeyboard</string>
+	<key>CFBundleName</key>
+	<string>OG키보드</string>
+	<key>CFBundleDisplayName</key>
+	<string>OG키보드</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>13.0</string>
+	<key>LSBackgroundOnly</key>
+	<true/>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>InputMethodConnectionName</key>
+	<string>kr.ogapp.inputmethod.OGKeyboard_Connection</string>
+	<key>InputMethodServerControllerClass</key>
+	<string>OGInputController</string>
+	<key>InputMethodServerDelegateClass</key>
+	<string>OGInputController</string>
+	<key>TISInputSourceID</key>
+	<string>kr.ogapp.inputmethod.OGKeyboard</string>
+	<key>TISIntendedLanguage</key>
+	<string>ko</string>
+	<key>tsInputMethodCharacterRepertoireKey</key>
+	<array>
+		<string>Hang</string>
+		<string>Latn</string>
+	</array>
+	<key>tsInputMethodIconFileKey</key>
+	<string>icon.tiff</string>
+	<key>TISIconIsTemplate</key>
+	<true/>
+</dict>
+</plist>

@@ -1,1 +1,24 @@
-# og-keyboard-mac
+# OG키보드 (macOS)
+
+애플 실리콘 맥용 한글 입력기. 안드로이드판 OG외장키보드(`sebeol390-ime`)의 기능을 맥으로 옮기는 중.
+
+## 지금 되는 것 (0.1)
+- 세벌식 390 (모아치기), 자모 단위 Backspace
+- 오른쪽 Option 짧게 → 한/영 전환 (화면 아래 팝업: 파란 '가' / 초록 'a')
+- 영문 모드는 키를 그대로 앱에 넘김
+
+## 빌드·설치
+```
+./dev.sh        # 받아오기 → 테스트 → 빌드 → ~/Library/Input Methods 설치 → 등록
+./dev.sh log    # 입력기 로그 보기
+```
+처음 한 번: 시스템 설정 → 키보드 → 입력 소스 → 편집 → + → 한국어 → **OG키보드** 추가.
+
+## 구조
+| 경로 | 역할 |
+|---|---|
+| `Sources/HangulCore/` | 조합기·자판 표 (안드판에서 옮김, 맥 의존성 없음) |
+| `Tests/HangulCoreTests/` | 조합기 테스트 (`swift test`) |
+| `App/` | 입력기 본체 (InputMethodKit), Info.plist, 아이콘 |
+
+자판 표 출처: libhangul (LGPL-2.1).
