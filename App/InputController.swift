@@ -111,7 +111,8 @@ final class InputController: IMKInputController {
             return false
         }
         if event.modifierFlags.contains(flag) {
-            if tapKey != nil { tapUsed = true }   // 다른 탭 키를 누른 채 눌렀으면 둘 다 무효
+            if tapKey == event.keyCode { return false }   // 크롬·Electron 앱은 같은 신호를 두 번 보냄 → 무시
+            if tapKey != nil { tapUsed = true }           // 다른 탭 키를 누른 채 눌렀으면 둘 다 무효
             else { tapKey = event.keyCode; tapUsed = false }
         } else if tapKey == event.keyCode {
             let used = tapUsed
