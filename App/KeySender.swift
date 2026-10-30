@@ -97,6 +97,19 @@ enum KeySender {
         }
     }
 
+    /// 커서를 왼쪽으로 n칸 (단축어 {커서})
+    static func arrowLeft(_ n: Int) {
+        guard trusted else { return }
+        let src = CGEventSource(stateID: .combinedSessionState)
+        for _ in 0..<n {
+            for down in [true, false] {
+                let e = CGEvent(keyboardEventSource: src, virtualKey: 123, keyDown: down)
+                e?.flags = []
+                post(e)
+            }
+        }
+    }
+
     static func type(_ s: String) {
         let src = CGEventSource(stateID: .combinedSessionState)
         // 한 이벤트에 UTF-16 16개까지: 글자(이모지 포함)가 잘리지 않게 묶는다
@@ -141,7 +154,7 @@ enum KeySender {
         guard pending > 0, Date() < busyUntil else { pending = 0; return false }
         // Backspace(51) 또는 글자를 실어 보낸 키(0번 키에 ASCII가 아닌 글자)
         let chars = event.characters ?? ""
-        let looksOurs = event.keyCode == 51
+        let looksOurs = event.keyCode == 51 || event.keyCode == 123
             || (event.keyCode == 0 && !chars.isEmpty && !chars.unicodeScalars.allSatisfy(\.isASCII))
         if looksOurs { pending -= 1 }
         return looksOurs

@@ -73,12 +73,12 @@ extension InputController {
             let trustRead = before != nil && !Terminals.contains(app)
             if trustRead, let b = before {
                 replace = .before(end: anchor! + (composing as NSString).length)
-                items = HanjaDict.candidates(before: b + composing, hanja: Dicts.hanja, emoji: Dicts.emoji)
+                items = shortcutItems(b + composing) + HanjaDict.candidates(before: b + composing, hanja: Dicts.hanja, emoji: Dicts.emoji)
                 commit(sender)   // 조합 글자는 확정해 두고 바꿀 때 범위로 교체
             } else if KeySender.trusted {
                 commit(sender)   // 확정하면 기록에도 들어감
                 replace = .keystrokes
-                items = HanjaDict.candidates(before: TypedText.text, hanja: Dicts.hanja, emoji: Dicts.emoji)
+                items = shortcutItems(TypedText.text) + HanjaDict.candidates(before: TypedText.text, hanja: Dicts.hanja, emoji: Dicts.emoji)
             } else {
                 KeySender.requestTrust()
                 replace = .composingOnly
@@ -93,7 +93,8 @@ extension InputController {
         }
 
         let first = items[0]
-        let title = first.key.count == 1 && first.key.first.map(HanjaDict.isCompatConsonant) == true ? "기호"
+        let title = first.template != nil ? "단축어"
+            : first.key.count == 1 && first.key.first.map(HanjaDict.isCompatConsonant) == true ? "기호"
             : items.allSatisfy(\.emoji) ? "이모지" : "한자"
         var session = HanjaSession(items: items, title: title, replace: replace, caret: caretRect(client))
         if case .keystrokes = replace {
@@ -124,6 +125,15 @@ extension InputController {
         }
         hanja = nil
         CandidatePanel.shared.hide()
+    }
+
+    /// 커서 앞 낱말이 단축어 이름이면 후보 맨 위에 (미리보기는 지금 시각으로 펼친 결과)
+    private func shortcutItems(_ before: String) -> [HanjaEntry] {
+        TextShortcuts.match(ShortcutStore.all, before: before).map { s in
+            let preview = TextShortcuts.expand(s.template, now: Date(), clipboard: "📋").text
+                .replacingOccurrences(of: "\n", with: "⏎")
+            return HanjaEntry(key: s.trigger, text: preview, meaning: "단축어 \(s.trigger)", emoji: false, template: s.template)
+        }
     }
 
     // MARK: 키
@@ -170,19 +180,28 @@ extension InputController {
         guard let h = hanja, index < h.items.count else { return }
         let e = h.items[index]
         closeHanja()   // 보이지 않는 조합 글자부터 지우고 바꾼다
+        // 단축어는 지금 시각·클립보드로 펼치고, {커서}가 있으면 그 자리로 커서를 옮긴다
+        var text = e.text
+        var cursorBack = 0
+        if let t = e.template {
+            let x = TextShortcuts.expand(t, now: Date(), clipboard: NSPasteboard.general.string(forType: .string))
+            text = x.text
+            cursorBack = x.after.count
+        }
         switch h.replace {
         case .selection(let r):
-            client.insertText(e.text, replacementRange: r)
+            client.insertText(text, replacementRange: r)
         case .before(let end):
             let n = (e.key as NSString).length
-            client.insertText(e.text, replacementRange: NSRange(location: max(0, end - n), length: n))
+            client.insertText(text, replacementRange: NSRange(location: max(0, end - n), length: n))
         case .keystrokes:
             KeySender.backspaces(e.key.count)
-            KeySender.type(e.text)
+            KeySender.type(text)
         case .composingOnly:
             _ = engine.flush()
-            client.insertText(e.text, replacementRange: notFound)
+            client.insertText(text, replacementRange: notFound)
         }
+        if cursorBack > 0 { KeySender.arrowLeft(cursorBack) }
         TypedText.clear()
         keyLog.info("한자 선택 \(e.key, privacy: .public) → \(e.text, privacy: .public)")
     }

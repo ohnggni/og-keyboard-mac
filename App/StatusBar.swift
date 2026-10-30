@@ -49,6 +49,10 @@ final class StatusBar: NSObject {
         term.tag = 2
         menu.addItem(term)
         menu.addItem(.separator())
+        let sc = NSMenuItem(title: "텍스트 단축어…", action: #selector(openShortcuts), keyEquivalent: "")
+        sc.target = self
+        menu.addItem(sc)
+        menu.addItem(.separator())
         let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let about = NSMenuItem(title: "OG키보드 \(ver)", action: nil, keyEquivalent: "")
         about.isEnabled = false
@@ -72,6 +76,10 @@ final class StatusBar: NSObject {
 
     @objc private func toggleRemember() {
         ModeState.rememberPerApp.toggle()
+    }
+
+    @objc private func openShortcuts() {
+        ShortcutsWindow.shared.show()
     }
 
     @objc private func toggleTerminal() {
