@@ -8,7 +8,7 @@ final class HanEnConverter {
 
     /// 같은 값을 내는 키가 여럿이면 Shift 없는 키를 먼저 쓴다
     private static let keyPreference = Array(
-        "abcdefghijklmnopqrstuvwxyz0123456789`-=[]\;',./"
+        "abcdefghijklmnopqrstuvwxyz0123456789`-=[]\\;',./"
         + "ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}|:\"<>?")
 
     init(layout: Layout, moachigi: Bool = true) {
