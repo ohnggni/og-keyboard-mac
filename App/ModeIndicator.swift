@@ -7,6 +7,8 @@ final class ModeIndicator {
     private var panel: NSPanel?
     private var label: NSTextField?
     private var hideWork: DispatchWorkItem?
+    /// 연타 대비: 앞선 페이드아웃이 끝나며 새 팝업을 숨기지 않도록 세대 번호로 구분
+    private var generation = 0
     private let size: CGFloat = 64
 
     func show(hangul: Bool) {
@@ -21,14 +23,22 @@ final class ModeIndicator {
             : NSColor(srgbRed: 0.13, green: 0.59, blue: 0.33, alpha: 0.92)).cgColor
 
         hideWork?.cancel()
-        panel.alphaValue = 1
+        generation += 1
+        let gen = generation
+        // 진행 중인 페이드아웃을 즉시 끊고 불투명으로
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0
+            panel.animator().alphaValue = 1
+        }
         panel.orderFrontRegardless()
 
-        let work = DispatchWorkItem { [weak panel] in
+        let work = DispatchWorkItem { [weak self, weak panel] in
             NSAnimationContext.runAnimationGroup({ ctx in
-                ctx.duration = 0.25
+                ctx.duration = 0.2
                 panel?.animator().alphaValue = 0
-            }, completionHandler: { panel?.orderOut(nil) })
+            }, completionHandler: {
+                if self?.generation == gen { panel?.orderOut(nil) }
+            })
         }
         hideWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.7, execute: work)
