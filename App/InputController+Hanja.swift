@@ -25,6 +25,8 @@ struct HanjaSession {
     var title: String
     var replace: HanjaReplace
     var caret: NSRect?
+    /// 터미널용: 후보 창이 떠 있는 동안 걸어둔 '보이지 않는 조합 글자'를 지울 대상
+    var placeholderClient: IMKTextInput? = nil
 }
 
 private let notFound = NSRange(location: NSNotFound, length: NSNotFound)
@@ -94,7 +96,14 @@ extension InputController {
         let first = items[0]
         let title = first.key.count == 1 && first.key.first.map(HanjaDict.isCompatConsonant) == true ? "기호"
             : items.allSatisfy(\.emoji) ? "이모지" : "한자"
-        hanja = HanjaSession(items: items, title: title, replace: replace, caret: caretRect(client))
+        var session = HanjaSession(items: items, title: title, replace: replace, caret: caretRect(client))
+        if case .keystrokes = replace {
+            // iTerm2 등은 조합 글자가 없으면 입력기가 처리한 키(Enter·Space·숫자)도 자기가 또 처리함
+            // → 폭 0 글자를 조합 중으로 걸어 키가 새지 않게
+            client.setMarkedText("\u{200B}", selectionRange: NSRange(location: 1, length: 0), replacementRange: notFound)
+            session.placeholderClient = client
+        }
+        hanja = session
         CandidatePanel.shared.onPick = { [weak self] i in self?.pickHanja(i, client) }
         redrawHanja()
     }
@@ -111,6 +120,9 @@ extension InputController {
     }
 
     func closeHanja() {
+        if let c = hanja?.placeholderClient {
+            c.setMarkedText("", selectionRange: NSRange(location: 0, length: 0), replacementRange: notFound)
+        }
         hanja = nil
         CandidatePanel.shared.hide()
     }
@@ -158,6 +170,7 @@ extension InputController {
     func pickHanja(_ index: Int, _ client: IMKTextInput) {
         guard let h = hanja, index < h.items.count else { return }
         let e = h.items[index]
+        closeHanja()   // 보이지 않는 조합 글자부터 지우고 바꾼다
         switch h.replace {
         case .selection(let r):
             client.insertText(e.text, replacementRange: r)
@@ -173,6 +186,5 @@ extension InputController {
         }
         TypedText.clear()
         keyLog.info("한자 선택 \(e.key, privacy: .public) → \(e.text, privacy: .public)")
-        closeHanja()
     }
 }
