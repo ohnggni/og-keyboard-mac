@@ -29,6 +29,9 @@ if CommandLine.arguments.contains("--install") {
     exit(0)
 }
 
+let app = NSApplication.shared
+app.setActivationPolicy(.accessory)
 let server = IMKServer(name: connectionName, bundleIdentifier: bundleID)
+StatusBar.shared.setup()
 NSLog("OGKeyboard 시작 (\(bundleID))")
-NSApplication.shared.run()
+app.run()

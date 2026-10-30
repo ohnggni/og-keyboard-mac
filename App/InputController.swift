@@ -4,10 +4,17 @@ import os
 
 let keyLog = Logger(subsystem: "kr.ogapp.inputmethod.OGKeyboard", category: "key")
 
-/// 한/영 상태 (1단계: 모든 앱 공통. 앱별 기억은 나중에)
+/// 한/영 상태와 자판 (모든 앱 공통. 앱별 기억은 나중에)
 enum ModeState {
-    static var hangul = true
-    static var layout = Layouts.l390
+    static var hangul = true {
+        didSet { StatusBar.shared.update() }
+    }
+    static var layout = Layouts.byId(UserDefaults.standard.string(forKey: "layout") ?? "390") {
+        didSet {
+            UserDefaults.standard.set(layout.id, forKey: "layout")
+            StatusBar.shared.update()
+        }
+    }
 }
 
 /// 맥 가상 키 코드 (Carbon kVK_*)
@@ -86,6 +93,7 @@ final class InputController: IMKInputController {
             return false
         }
 
+        engine.dubeol = ModeState.layout.dubeol
         let v = ModeState.layout.map(ascii)
         if HangulEngine.isJamo(v) {
             let committed = engine.input(v)
