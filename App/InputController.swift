@@ -69,6 +69,10 @@ final class InputController: IMKInputController {
     let engine = HangulEngine()
     /// 열려 있는 한자 후보 (InputController+Hanja.swift)
     var hanja: HanjaSession?
+    /// 열려 있는 이모지 창 (InputController+Emoji.swift)
+    var emojiSession: EmojiSession?
+    /// 오른쪽 Option 두 번 누르기 판단용
+    private var lastOptionTap: Date?
     /// 눌려 있는 '단독 탭' 후보 수식키(오른쪽 Command/Option). 누른 채 다른 키를 쓰면 tapUsed → 뗄 때 무시
     private var tapKey: UInt16? = nil
     private var tapUsed = false
@@ -98,6 +102,7 @@ final class InputController: IMKInputController {
 
     override func deactivateServer(_ sender: Any!) {
         closeHanja()
+        closeEmoji()
         commit(sender)
     }
 
@@ -112,6 +117,12 @@ final class InputController: IMKInputController {
         if KeySender.isOurs(event) { return false }   // 우리가 흉내 내 보낸 키는 그대로 통과
 
         if tapKey != nil { tapUsed = true }
+
+        // 이모지 창이 열려 있으면 먼저: 이동/넣기, 그 외 키는 창 닫고 평소대로
+        if emojiSession != nil {
+            if handleEmojiKey(event) { return true }
+            closeEmoji()
+        }
 
         // 한자 후보 창이 열려 있으면 먼저: 고르기/넘기기, 그 외 키는 창 닫고 평소대로
         if hanja != nil {
@@ -180,7 +191,7 @@ final class InputController: IMKInputController {
     // MARK: 단독 탭: 오른쪽 Command = 한/영, 오른쪽 Option = 한자
 
     private func handleFlags(_ event: NSEvent, _ sender: Any!) -> Bool {
-        keyLog.info("flags keyCode=\(event.keyCode, privacy: .public) raw=0x\(String(event.modifierFlags.rawValue, radix: 16), privacy: .public)")
+        keyLog.debug("flags keyCode=\(event.keyCode, privacy: .public) raw=0x\(String(event.modifierFlags.rawValue, radix: 16), privacy: .public)")
         // 입력기로 오는 이벤트엔 좌우 구분 비트가 빠져 있음 → 키 코드로 오른쪽을 구분하고 수식 비트로 누름/뗌 판단
         let flag: NSEvent.ModifierFlags
         switch event.keyCode {
@@ -224,7 +235,18 @@ final class InputController: IMKInputController {
         switch keyCode {
         case Key.rightCommand: toggleMode(sender)
         case Key.rightOption:
-            if hanja != nil { closeHanja() } else { startHanja(sender) }
+            let now = Date()
+            if let last = lastOptionTap, now.timeIntervalSince(last) < 0.4 {
+                // 두 번: 이모지 전체 창
+                lastOptionTap = nil
+                closeHanja()
+                openEmojiPanel(sender)
+            } else {
+                lastOptionTap = now
+                if emojiSession != nil { closeEmoji() }
+                else if hanja != nil { closeHanja() }
+                else { startHanja(sender) }
+            }
         default: break
         }
     }

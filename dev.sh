@@ -32,7 +32,10 @@ swiftc -O -swift-version 5 -target arm64-apple-macos13.0 -module-name $NAME \
   -framework Cocoa -framework InputMethodKit -framework Carbon -framework IOKit \
   -o "$APP/Contents/MacOS/$NAME"
 cp App/Info.plist "$APP/Contents/"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(git rev-list --count HEAD)" "$APP/Contents/Info.plist"
 cp App/Resources/*.dat "$APP/Contents/Resources/"
+cp App/Resources/emoji_groups.txt "$APP/Contents/Resources/"
+mkdir -p "$APP/Contents/Resources/licenses" && cp licenses/*.txt "$APP/Contents/Resources/licenses/"
 cp -R App/Resources/*.lproj "$APP/Contents/Resources/"
 tiffutil -cathidpicheck App/Resources/icon.png App/Resources/icon@2x.png \
   -out "$APP/Contents/Resources/icon.tiff" >/dev/null 2>&1

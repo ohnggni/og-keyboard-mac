@@ -69,7 +69,7 @@ final class CapsMonitor {
         guard let start = downAt else { return }
         downAt = nil
         let held = Date().timeIntervalSince(start)
-        guard Self.ogIsCurrent else { return }
+        guard InputSources.ogIsCurrent else { return }
         // 뗄 때쯤엔 맥이 이미 대문자 고정을 바꿔 둔 상태
         let on = CapsLock.isOn
         keyLog.info("Caps Lock \(held, format: .fixed(precision: 2), privacy: .public)초, 대문자 고정 \(on ? "켜짐" : "꺼짐", privacy: .public)")
@@ -92,13 +92,8 @@ final class CapsMonitor {
             }
             ModeIndicator.shared.show(hangul: ModeState.hangul)
         }
+        // 대문자 고정 상태가 반영된 뒤 메뉴바 아이콘 갱신
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { StatusBar.shared.update() }
     }
 
-    /// 지금 입력 소스가 OG키보드인지
-    static var ogIsCurrent: Bool {
-        let s = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
-        guard let v = TISGetInputSourceProperty(s, kTISPropertyInputSourceID) else { return false }
-        let id = Unmanaged<CFString>.fromOpaque(v).takeUnretainedValue() as String
-        return id.hasPrefix(Bundle.main.bundleIdentifier ?? "kr.ogapp.inputmethod.OGKeyboard")
-    }
 }
