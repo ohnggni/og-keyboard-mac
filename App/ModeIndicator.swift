@@ -12,15 +12,24 @@ final class ModeIndicator {
     private let size: CGFloat = 64
 
     func show(hangul: Bool) {
+        display(hangul ? "가" : "a", color: hangul
+            ? NSColor(srgbRed: 0.10, green: 0.45, blue: 0.91, alpha: 0.92)
+            : NSColor(srgbRed: 0.13, green: 0.59, blue: 0.33, alpha: 0.92))
+    }
+
+    /// 짧은 알림 (예: 한자 후보 없음 → 漢)
+    func showMark(_ text: String) {
+        display(text, color: NSColor(white: 0.35, alpha: 0.92))
+    }
+
+    private func display(_ text: String, color: NSColor) {
         let panel = self.panel ?? makePanel()
         guard let screen = NSScreen.main ?? NSScreen.screens.first else { return }
         let f = screen.visibleFrame
         panel.setFrame(NSRect(x: f.midX - size / 2, y: f.minY + 80, width: size, height: size), display: false)
 
-        label?.stringValue = hangul ? "가" : "a"
-        panel.contentView?.layer?.backgroundColor = (hangul
-            ? NSColor(srgbRed: 0.10, green: 0.45, blue: 0.91, alpha: 0.92)
-            : NSColor(srgbRed: 0.13, green: 0.59, blue: 0.33, alpha: 0.92)).cgColor
+        label?.stringValue = text
+        panel.contentView?.layer?.backgroundColor = color.cgColor
 
         hideWork?.cancel()
         generation += 1

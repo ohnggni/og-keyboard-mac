@@ -55,10 +55,19 @@ private enum Key {
     static let rightOption: UInt16 = 61
 }
 
+/// 한자 후보 창 키 처리용
+enum HanjaKey {
+    static let tab: UInt16 = 48, space: UInt16 = 49, returnKey: UInt16 = 36, enter: UInt16 = 76, escape: UInt16 = 53
+    static let left: UInt16 = 123, right: UInt16 = 124, down: UInt16 = 125, up: UInt16 = 126
+    static let pageUp: UInt16 = 116, pageDown: UInt16 = 121
+}
+
 @objc(OGInputController)
 final class InputController: IMKInputController {
 
-    private let engine = HangulEngine()
+    let engine = HangulEngine()
+    /// 열려 있는 한자 후보 (InputController+Hanja.swift)
+    var hanja: HanjaSession?
     /// 눌려 있는 '단독 탭' 후보 수식키(오른쪽 Command/Option). 누른 채 다른 키를 쓰면 tapUsed → 뗄 때 무시
     private var tapKey: UInt16? = nil
     private var tapUsed = false
@@ -78,6 +87,7 @@ final class InputController: IMKInputController {
     }
 
     override func deactivateServer(_ sender: Any!) {
+        closeHanja()
         commit(sender)
     }
 
@@ -91,6 +101,12 @@ final class InputController: IMKInputController {
         if event.type != .keyDown { return false }
 
         if tapKey != nil { tapUsed = true }
+
+        // 한자 후보 창이 열려 있으면 먼저: 고르기/넘기기, 그 외 키는 창 닫고 평소대로
+        if hanja != nil {
+            if handleHanjaKey(event, sender) { return true }
+            closeHanja()
+        }
 
         // Cmd/Ctrl/Option 조합 단축키: 조합 확정 후 앱으로
         let mods = event.modifierFlags.intersection([.command, .control, .option])
@@ -136,7 +152,7 @@ final class InputController: IMKInputController {
         return true
     }
 
-    // MARK: 단독 탭: 오른쪽 Command = 한/영, 오른쪽 Option = 한자(예정)
+    // MARK: 단독 탭: 오른쪽 Command = 한/영, 오른쪽 Option = 한자
 
     private func handleFlags(_ event: NSEvent, _ sender: Any!) -> Bool {
         keyLog.info("flags keyCode=\(event.keyCode, privacy: .public) raw=0x\(String(event.modifierFlags.rawValue, radix: 16), privacy: .public)")
@@ -164,7 +180,8 @@ final class InputController: IMKInputController {
     private func onTap(_ keyCode: UInt16, _ sender: Any!) {
         switch keyCode {
         case Key.rightCommand: toggleMode(sender)
-        case Key.rightOption: keyLog.info("한자 키 (아직 미구현)")
+        case Key.rightOption:
+            if hanja != nil { closeHanja() } else { startHanja(sender) }
         default: break
         }
     }
@@ -192,25 +209,25 @@ final class InputController: IMKInputController {
         return Int(c)
     }
 
-    private func textClient(_ sender: Any!) -> IMKTextInput? {
+    func textClient(_ sender: Any!) -> IMKTextInput? {
         if let c = sender as? IMKTextInput { return c }
         if let c = client() { return c }
         return nil
     }
 
-    private func insert(_ text: String, _ sender: Any!) {
+    func insert(_ text: String, _ sender: Any!) {
         guard !text.isEmpty else { return }
         textClient(sender)?.insertText(text, replacementRange: NSRange(location: NSNotFound, length: NSNotFound))
     }
 
-    private func updateMarked(_ sender: Any!) {
+    func updateMarked(_ sender: Any!) {
         let s = engine.composing()
         textClient(sender)?.setMarkedText(s,
             selectionRange: NSRange(location: (s as NSString).length, length: 0),
             replacementRange: NSRange(location: NSNotFound, length: NSNotFound))
     }
 
-    private func commit(_ sender: Any!) {
+    func commit(_ sender: Any!) {
         if engine.isEmpty { return }
         insert(engine.flush(), sender)
     }

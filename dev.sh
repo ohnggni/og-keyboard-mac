@@ -27,6 +27,7 @@ swiftc -O -swift-version 5 -target arm64-apple-macos13.0 -module-name $NAME \
   -framework Cocoa -framework InputMethodKit -framework Carbon \
   -o "$APP/Contents/MacOS/$NAME"
 cp App/Info.plist "$APP/Contents/"
+cp App/Resources/*.dat "$APP/Contents/Resources/"
 tiffutil -cathidpicheck App/Resources/icon.png App/Resources/icon@2x.png \
   -out "$APP/Contents/Resources/icon.tiff" >/dev/null 2>&1
 codesign --force --sign - "$APP"

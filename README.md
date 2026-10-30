@@ -8,6 +8,7 @@
 - 영문 모드는 키를 그대로 앱에 넘김
 - 메뉴바 아이콘('가'/'A')에 한/영 상태, 메뉴에서 자판 선택(390/391/순아래/두벌식)
 - 앱별 한/영 기억 (메뉴에서 끄기·지우기)
+- 오른쪽 Option 짧게 → 한자·기호·이모지 후보 (긴 낱말부터, 자음 하나 뒤면 기호표, 선택 영역 변환)
 
 ## 빌드·설치
 ```
@@ -23,4 +24,4 @@
 | `Tests/HangulCoreTests/` | 조합기 테스트 (`swift test`) |
 | `App/` | 입력기 본체 (InputMethodKit), Info.plist, 아이콘 |
 
-자판 표 출처: libhangul (LGPL-2.1).
+자판 표 출처: libhangul (LGPL-2.1). 한자 사전: libhangul hanja (BSD-3), 이모지: Unicode CLDR·emojibase — `licenses/` 참고.
