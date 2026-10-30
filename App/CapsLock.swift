@@ -1,8 +1,10 @@
 import Cocoa
+import Carbon
 import IOKit
+import IOKit.hid
 import IOKit.hidsystem
 
-/// 대문자 고정 상태를 직접 켜고 끈다 (Caps Lock 짧게 = 한/영 처리용)
+/// 대문자 고정 상태를 직접 켜고 끈다
 enum CapsLock {
     static func set(_ on: Bool) {
         let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOHIDSystem"))
@@ -14,8 +16,76 @@ enum CapsLock {
         IOHIDSetModifierLockState(connect, Int32(kIOHIDCapsLockState), on)
     }
 
-    /// Caps Lock 키가 지금 물리적으로 눌려 있는지
-    static var isPressed: Bool {
-        CGEventSource.keyState(.hidSystemState, key: 57)
+    static var isOn: Bool {
+        CGEventSource.flagsState(.hidSystemState).contains(.maskAlphaShift)
+    }
+}
+
+/// Caps Lock 키의 누름·뗌을 키보드 장치에서 직접 듣는다 (입력기에는 뗌 신호가 오지 않아서).
+/// 짧게(0.4초 미만) = 한/영 + 대문자 고정 되돌림, 길게 = 대문자 고정 유지. '입력 모니터링' 권한 필요.
+final class CapsMonitor {
+    static let shared = CapsMonitor()
+
+    /// 짧게 눌렀을 때 (OG키보드가 지금 입력 소스일 때만 불림)
+    var onTap: (() -> Void)?
+    private var manager: IOHIDManager?
+    private var downAt: Date?
+    private let longPress: TimeInterval = 0.4
+
+    func start() {
+        if IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) != kIOHIDAccessTypeGranted {
+            keyLog.info("입력 모니터링 권한 요청")
+            IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
+        }
+        let m = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
+        IOHIDManagerSetDeviceMatching(m, [
+            kIOHIDDeviceUsagePageKey: kHIDPage_GenericDesktop,
+            kIOHIDDeviceUsageKey: kHIDUsage_GD_Keyboard,
+        ] as CFDictionary)
+        IOHIDManagerSetInputValueMatching(m, [
+            kIOHIDElementUsagePageKey: kHIDPage_KeyboardOrKeypad,
+            kIOHIDElementUsageKey: kHIDUsage_KeyboardCapsLock,
+        ] as CFDictionary)
+        let me = Unmanaged.passUnretained(self).toOpaque()
+        IOHIDManagerRegisterInputValueCallback(m, { ctx, _, _, value in
+            guard let ctx = ctx else { return }
+            let monitor = Unmanaged<CapsMonitor>.fromOpaque(ctx).takeUnretainedValue()
+            let pressed = IOHIDValueGetIntegerValue(value) != 0
+            DispatchQueue.main.async { monitor.handle(pressed: pressed) }
+        }, me)
+        IOHIDManagerScheduleWithRunLoop(m, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+        let r = IOHIDManagerOpen(m, IOOptionBits(kIOHIDOptionsTypeNone))
+        keyLog.info("Caps Lock 감시 시작: \(r == kIOReturnSuccess ? "성공" : "오류 \(r)", privacy: .public)")
+        manager = m
+    }
+
+    private func handle(pressed: Bool) {
+        if pressed {
+            if downAt == nil { downAt = Date() }   // 장치가 여럿이면 같은 누름이 두 번 올 수 있음
+            return
+        }
+        guard let start = downAt else { return }
+        downAt = nil
+        let held = Date().timeIntervalSince(start)
+        guard Self.ogIsCurrent else { return }
+        // 뗄 때쯤엔 맥이 이미 대문자 고정을 바꿔 둔 상태
+        let on = CapsLock.isOn
+        keyLog.info("Caps Lock \(held, format: .fixed(precision: 2), privacy: .public)초, 대문자 고정 \(on ? "켜짐" : "꺼짐", privacy: .public)")
+        if held < longPress && on {
+            CapsLock.set(false)        // 짧게: 방금 켜진 대문자 고정을 되돌리고 한/영
+            onTap?()
+        } else if on {
+            ModeIndicator.shared.showCaps()
+        } else {
+            ModeIndicator.shared.show(hangul: ModeState.hangul)   // 대문자 고정 해제
+        }
+    }
+
+    /// 지금 입력 소스가 OG키보드인지
+    static var ogIsCurrent: Bool {
+        let s = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
+        guard let v = TISGetInputSourceProperty(s, kTISPropertyInputSourceID) else { return false }
+        let id = Unmanaged<CFString>.fromOpaque(v).takeUnretainedValue() as String
+        return id.hasPrefix(Bundle.main.bundleIdentifier ?? "kr.ogapp.inputmethod.OGKeyboard")
     }
 }

@@ -76,8 +76,6 @@ final class InputController: IMKInputController {
     private var longWork: DispatchWorkItem?
     private var longFired = false
     private let longPressDelay = 0.4
-    /// Caps Lock을 되돌릴 때 생기는 신호 하나는 무시
-    private var capsIgnoreNext = false
 
     // MARK: 시스템 콜백
 
@@ -85,7 +83,11 @@ final class InputController: IMKInputController {
         Int(NSEvent.EventTypeMask([.keyDown, .flagsChanged]).rawValue)
     }
 
+    /// 지금 입력을 받는 컨트롤러 (장치에서 들은 Caps Lock 한/영을 넘겨줄 곳)
+    static weak var active: InputController?
+
     override func activateServer(_ sender: Any!) {
+        InputController.active = self
         // 키 → 글자 변환을 US 배열로 고정 (자판 표가 US 기준)
         (sender as? IMKTextInput)?.overrideKeyboard(withKeyboardNamed: "com.apple.keylayout.US")
         engine.dubeol = ModeState.layout.dubeol
@@ -178,8 +180,7 @@ final class InputController: IMKInputController {
         case Key.rightCommand: flag = .command
         case Key.rightOption: flag = .option
         case Key.capsLock:
-            handleCapsLock(on: event.modifierFlags.contains(.capsLock), sender)
-            return false
+            return false   // Caps Lock은 CapsMonitor가 장치에서 직접 처리
         default:
             if tapKey != nil { tapUsed = true }
             return false
@@ -212,33 +213,6 @@ final class InputController: IMKInputController {
         return false
     }
 
-    // MARK: Caps Lock: 짧게 = 한/영, 길게 = 대문자 고정 (안드판과 같음)
-
-    /// 맥은 Caps Lock을 누르는 순간 대문자 고정을 바꾼다. 0.4초 안에 떼면 되돌리고 한/영 전환.
-    private func handleCapsLock(on: Bool, _ sender: Any!) {
-        if capsIgnoreNext { capsIgnoreNext = false; return }   // 우리가 되돌린 신호
-        guard on else {
-            // 켜져 있던 대문자 고정을 끈 것: 한/영은 그대로
-            ModeIndicator.shared.show(hangul: ModeState.hangul)
-            return
-        }
-        let start = Date()
-        func check() {
-            if CapsLock.isPressed && Date().timeIntervalSince(start) < longPressDelay {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.03, execute: check)
-                return
-            }
-            if CapsLock.isPressed {
-                ModeIndicator.shared.showCaps()          // 길게: 대문자 고정 유지
-            } else {
-                capsIgnoreNext = true                     // 짧게: 대문자 고정 되돌리고 한/영
-                CapsLock.set(false)
-                toggleMode(sender)
-            }
-        }
-        check()
-    }
-
     private func onTap(_ keyCode: UInt16, _ sender: Any!) {
         switch keyCode {
         case Key.rightCommand: toggleMode(sender)
@@ -248,7 +222,7 @@ final class InputController: IMKInputController {
         }
     }
 
-    private func toggleMode(_ sender: Any!) {
+    func toggleMode(_ sender: Any!) {
         commit(sender)
         ModeState.hangul.toggle()
         keyLog.info("toggle → \(ModeState.hangul ? "한글" : "영문", privacy: .public)")

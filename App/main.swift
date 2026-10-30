@@ -33,6 +33,11 @@ let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
 let server = IMKServer(name: connectionName, bundleIdentifier: bundleID)
 StatusBar.shared.setup()
+CapsMonitor.shared.onTap = {
+    if let c = InputController.active { c.toggleMode(nil) }
+    else { ModeState.hangul.toggle(); ModeIndicator.shared.show(hangul: ModeState.hangul) }
+}
+CapsMonitor.shared.start()
 // 클릭하면 커서가 옮겨졌을 수 있으니 글자 기록을 끊는다 (마우스 전역 감시는 권한 불필요)
 NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { _ in
     TypedText.clearTextOnly()
