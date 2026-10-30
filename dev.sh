@@ -10,7 +10,7 @@ APP="build/$NAME.app"
 DEST="$HOME/Library/Input Methods/$NAME.app"
 
 if [[ "${1:-}" == "log" ]]; then
-  exec log stream --style compact --predicate "process == \"$NAME\""
+  exec log stream --style compact --level info --predicate "subsystem == \"kr.ogapp.inputmethod.OGKeyboard\""
 fi
 
 echo "▶ 1/5 받아오기"
