@@ -4,16 +4,46 @@ import os
 
 let keyLog = Logger(subsystem: "kr.ogapp.inputmethod.OGKeyboard", category: "key")
 
-/// 한/영 상태와 자판 (모든 앱 공통. 앱별 기억은 나중에)
+/// 한/영 상태와 자판. 한/영은 앱별로 기억 (켜져 있을 때)
 enum ModeState {
+    private static let defaults = UserDefaults.standard
+
     static var hangul = true {
-        didSet { StatusBar.shared.update() }
-    }
-    static var layout = Layouts.byId(UserDefaults.standard.string(forKey: "layout") ?? "390") {
         didSet {
-            UserDefaults.standard.set(layout.id, forKey: "layout")
+            if rememberPerApp, let app = currentApp, appModes[app] != hangul {
+                appModes[app] = hangul
+                defaults.set(appModes, forKey: "appModes")
+            }
             StatusBar.shared.update()
         }
+    }
+    static var layout = Layouts.byId(defaults.string(forKey: "layout") ?? "390") {
+        didSet {
+            defaults.set(layout.id, forKey: "layout")
+            StatusBar.shared.update()
+        }
+    }
+
+    /// 지금 입력 중인 앱(번들 ID)
+    private(set) static var currentApp: String?
+    private static var appModes = defaults.dictionary(forKey: "appModes") as? [String: Bool] ?? [:]
+
+    static var rememberPerApp: Bool {
+        get { defaults.object(forKey: "rememberPerApp") as? Bool ?? true }
+        set { defaults.set(newValue, forKey: "rememberPerApp"); StatusBar.shared.update() }
+    }
+
+    /// 입력창이 활성화될 때: 그 앱의 마지막 한/영으로. 처음 보는 앱은 지금 상태 그대로.
+    static func activate(app: String?) {
+        currentApp = app
+        guard rememberPerApp, let app = app, let saved = appModes[app], saved != hangul else { return }
+        hangul = saved
+        keyLog.info("앱 \(app, privacy: .public) → \(saved ? "한글" : "영문", privacy: .public)")
+    }
+
+    static func clearAppModes() {
+        appModes = [:]
+        defaults.removeObject(forKey: "appModes")
     }
 }
 
@@ -44,6 +74,7 @@ final class InputController: IMKInputController {
         (sender as? IMKTextInput)?.overrideKeyboard(withKeyboardNamed: "com.apple.keylayout.US")
         engine.dubeol = ModeState.layout.dubeol
         tapKey = nil
+        ModeState.activate(app: textClient(sender)?.bundleIdentifier())
     }
 
     override func deactivateServer(_ sender: Any!) {

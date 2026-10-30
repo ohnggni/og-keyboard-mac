@@ -36,6 +36,14 @@ final class StatusBar: NSObject {
             menu.addItem(mi)
         }
         menu.addItem(.separator())
+        let remember = NSMenuItem(title: "앱별 한/영 기억", action: #selector(toggleRemember), keyEquivalent: "")
+        remember.target = self
+        remember.tag = 1
+        menu.addItem(remember)
+        let clear = NSMenuItem(title: "앱별 기억 지우기", action: #selector(clearRemember), keyEquivalent: "")
+        clear.target = self
+        menu.addItem(clear)
+        menu.addItem(.separator())
         let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let about = NSMenuItem(title: "OG키보드 \(ver)", action: nil, keyEquivalent: "")
         about.isEnabled = false
@@ -45,9 +53,18 @@ final class StatusBar: NSObject {
 
     private func refreshChecks(_ menu: NSMenu) {
         for mi in menu.items {
+            if mi.tag == 1 { mi.state = ModeState.rememberPerApp ? .on : .off; continue }
             guard let id = mi.representedObject as? String else { continue }
             mi.state = id == ModeState.layout.id ? .on : .off
         }
+    }
+
+    @objc private func toggleRemember() {
+        ModeState.rememberPerApp.toggle()
+    }
+
+    @objc private func clearRemember() {
+        ModeState.clearAppModes()
     }
 
     @objc private func selectLayout(_ sender: NSMenuItem) {
