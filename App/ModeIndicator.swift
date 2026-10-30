@@ -17,6 +17,11 @@ final class ModeIndicator {
             : NSColor(srgbRed: 0.13, green: 0.59, blue: 0.33, alpha: 0.92))
     }
 
+    /// 대문자 고정 (안드판과 같은 주황 'A')
+    func showCaps() {
+        display("A", color: NSColor(srgbRed: 0.93, green: 0.49, blue: 0.13, alpha: 0.92))
+    }
+
     /// 짧은 알림 (예: 한자 후보 없음 → 漢)
     func showMark(_ text: String) {
         display(text, color: NSColor(white: 0.35, alpha: 0.92))

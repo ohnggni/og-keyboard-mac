@@ -53,6 +53,7 @@ private enum Key {
     static let space: UInt16 = 49
     static let rightCommand: UInt16 = 54
     static let rightOption: UInt16 = 61
+    static let capsLock: UInt16 = 57
 }
 
 /// 한자 후보 창 키 처리용
@@ -174,6 +175,11 @@ final class InputController: IMKInputController {
         switch event.keyCode {
         case Key.rightCommand: flag = .command
         case Key.rightOption: flag = .option
+        case Key.capsLock:
+            // Caps Lock이 실제로 켜지고 꺼질 때(길게 누름) 상태 표시
+            if event.modifierFlags.contains(.capsLock) { ModeIndicator.shared.showCaps() }
+            else { ModeIndicator.shared.show(hangul: ModeState.hangul) }
+            return false
         default:
             if tapKey != nil { tapUsed = true }
             return false
