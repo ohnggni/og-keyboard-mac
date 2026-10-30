@@ -14,7 +14,12 @@ if [[ "${1:-}" == "log" ]]; then
 fi
 
 echo "▶ 1/5 받아오기"
-git pull --ff-only
+if [[ "${1:-}" != "--no-pull" ]]; then
+  before=$(git hash-object "$0")
+  git pull --ff-only
+  # dev.sh 자체가 바뀌었으면 새 내용으로 다시 실행 (실행 중 파일이 바뀌면 bash가 엉뚱한 줄을 읽음)
+  if [[ "$(git hash-object "$0")" != "$before" ]]; then exec "$0" --no-pull; fi
+fi
 
 echo "▶ 2/5 조합기 테스트"
 swift test 2>&1 | grep -E "Executed .* tests|error:|failed" | head -5
