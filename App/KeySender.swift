@@ -14,10 +14,53 @@ enum TypedText {
 
     static func dropLast() {
         if !text.isEmpty { text.removeLast() }
+        KeyLog.clear()
     }
 
     static func clear() {
         text = ""
+        KeyLog.clear()
+    }
+
+    /// 바로잡기로 끝부분을 바꿨을 때 기록도 맞춘다
+    static func replaceSuffix(count: Int, with s: String) {
+        text = String(text.dropLast(count)) + s
+    }
+}
+
+/// 실제로 누른 키 기록 (바로잡기용). 모아치기로 친 글자는 글자만 보고는 키 순서를 되살릴 수 없어서 필요.
+enum KeyLog {
+    /// 지금 치는 낱말의 키
+    private(set) static var current = ""
+    /// 끝난 낱말들 (오래된 것부터)
+    private static var words: [String] = []
+
+    static func key(_ c: Character) {
+        if current.count < 64 { current.append(c) }
+    }
+
+    /// 스페이스: 지금 낱말을 끝난 목록으로
+    static func endWord() {
+        if !current.isEmpty {
+            words.append(current)
+            if words.count > 20 { words.removeFirst() }
+        }
+        current = ""
+    }
+
+    /// 조합 중 Backspace: 지금 낱말만 못 믿게 됨
+    static func dropCurrent() {
+        current = ""
+    }
+
+    static func clear() {
+        current = ""
+        words = []
+    }
+
+    /// [지금 낱말, 바로 앞 낱말, …]
+    static var newestFirst: [String] {
+        (current.isEmpty ? [] : [current]) + words.reversed()
     }
 }
 
@@ -41,8 +84,11 @@ enum KeySender {
     static func backspaces(_ n: Int) {
         let src = CGEventSource(stateID: .combinedSessionState)
         for _ in 0..<n {
-            post(CGEvent(keyboardEventSource: src, virtualKey: 51, keyDown: true))
-            post(CGEvent(keyboardEventSource: src, virtualKey: 51, keyDown: false))
+            for down in [true, false] {
+                let e = CGEvent(keyboardEventSource: src, virtualKey: 51, keyDown: down)
+                e?.flags = []   // 오른쪽 Command를 누른 채 불릴 수 있음 → Cmd+Backspace(줄 지우기)가 되지 않게
+                post(e)
+            }
         }
     }
 

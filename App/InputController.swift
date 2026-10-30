@@ -71,6 +71,10 @@ final class InputController: IMKInputController {
     /// 눌려 있는 '단독 탭' 후보 수식키(오른쪽 Command/Option). 누른 채 다른 키를 쓰면 tapUsed → 뗄 때 무시
     private var tapKey: UInt16? = nil
     private var tapUsed = false
+    /// 오른쪽 Command 길게 = 바로잡기
+    private var longWork: DispatchWorkItem?
+    private var longFired = false
+    private let longPressDelay = 0.4
 
     // MARK: 시스템 콜백
 
@@ -127,6 +131,7 @@ final class InputController: IMKInputController {
 
         if event.keyCode == Key.delete {
             if engine.backspace() {
+                KeyLog.dropCurrent()
                 updateMarked(sender)
                 return true
             }
@@ -136,6 +141,7 @@ final class InputController: IMKInputController {
 
         if event.keyCode == Key.space {
             insert(engine.flush() + " ", sender)
+            KeyLog.endWord()
             return true
         }
 
@@ -147,6 +153,7 @@ final class InputController: IMKInputController {
         }
 
         engine.dubeol = ModeState.layout.dubeol
+        KeyLog.key(Character(UnicodeScalar(UInt32(ascii))!))
         let v = ModeState.layout.map(ascii)
         if HangulEngine.isJamo(v) {
             let committed = engine.input(v)
@@ -174,10 +181,26 @@ final class InputController: IMKInputController {
         if event.modifierFlags.contains(flag) {
             if tapKey == event.keyCode { return false }   // 크롬·Electron 앱은 같은 신호를 두 번 보냄 → 무시
             if tapKey != nil { tapUsed = true }           // 다른 탭 키를 누른 채 눌렀으면 둘 다 무효
-            else { tapKey = event.keyCode; tapUsed = false }
+            else {
+                tapKey = event.keyCode
+                tapUsed = false
+                longFired = false
+                longWork?.cancel()
+                if event.keyCode == Key.rightCommand {
+                    // 길게 누르면 바로잡기 (누른 채 다른 키를 쓰면 취소)
+                    let work = DispatchWorkItem { [weak self] in
+                        guard let self = self, self.tapKey == Key.rightCommand, !self.tapUsed else { return }
+                        self.longFired = true
+                        self.convertMistype(sender)
+                    }
+                    longWork = work
+                    DispatchQueue.main.asyncAfter(deadline: .now() + longPressDelay, execute: work)
+                }
+            }
         } else if tapKey == event.keyCode {
-            let used = tapUsed
+            let used = tapUsed || longFired
             tapKey = nil
+            longWork?.cancel()
             if !used { onTap(event.keyCode, sender) }
         }
         return false
@@ -226,6 +249,8 @@ final class InputController: IMKInputController {
         if event.keyCode == Key.delete { TypedText.dropLast(); return }
         if let s = event.characters, !s.isEmpty, s.unicodeScalars.allSatisfy({ $0.value >= 0x20 && $0.value != 0x7f && $0.value < 0xf700 }) {
             TypedText.append(s)
+            if s == " " { KeyLog.endWord() }
+            else if s.count == 1, let ch = s.first, ch.isASCII { KeyLog.key(ch) }
         } else {
             TypedText.clear()
         }
