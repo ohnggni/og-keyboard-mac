@@ -29,7 +29,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 swiftc -O -swift-version 5 -target arm64-apple-macos13.0 -module-name $NAME \
   Sources/HangulCore/*.swift App/*.swift \
-  -framework Cocoa -framework InputMethodKit -framework Carbon \
+  -framework Cocoa -framework InputMethodKit -framework Carbon -framework IOKit \
   -o "$APP/Contents/MacOS/$NAME"
 cp App/Info.plist "$APP/Contents/"
 cp App/Resources/*.dat "$APP/Contents/Resources/"

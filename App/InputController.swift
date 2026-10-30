@@ -76,6 +76,8 @@ final class InputController: IMKInputController {
     private var longWork: DispatchWorkItem?
     private var longFired = false
     private let longPressDelay = 0.4
+    /// Caps Lock을 되돌릴 때 생기는 신호 하나는 무시
+    private var capsIgnoreNext = false
 
     // MARK: 시스템 콜백
 
@@ -176,9 +178,7 @@ final class InputController: IMKInputController {
         case Key.rightCommand: flag = .command
         case Key.rightOption: flag = .option
         case Key.capsLock:
-            // Caps Lock이 실제로 켜지고 꺼질 때(길게 누름) 상태 표시
-            if event.modifierFlags.contains(.capsLock) { ModeIndicator.shared.showCaps() }
-            else { ModeIndicator.shared.show(hangul: ModeState.hangul) }
+            handleCapsLock(on: event.modifierFlags.contains(.capsLock), sender)
             return false
         default:
             if tapKey != nil { tapUsed = true }
@@ -210,6 +210,33 @@ final class InputController: IMKInputController {
             if !used { onTap(event.keyCode, sender) }
         }
         return false
+    }
+
+    // MARK: Caps Lock: 짧게 = 한/영, 길게 = 대문자 고정 (안드판과 같음)
+
+    /// 맥은 Caps Lock을 누르는 순간 대문자 고정을 바꾼다. 0.4초 안에 떼면 되돌리고 한/영 전환.
+    private func handleCapsLock(on: Bool, _ sender: Any!) {
+        if capsIgnoreNext { capsIgnoreNext = false; return }   // 우리가 되돌린 신호
+        guard on else {
+            // 켜져 있던 대문자 고정을 끈 것: 한/영은 그대로
+            ModeIndicator.shared.show(hangul: ModeState.hangul)
+            return
+        }
+        let start = Date()
+        func check() {
+            if CapsLock.isPressed && Date().timeIntervalSince(start) < longPressDelay {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.03, execute: check)
+                return
+            }
+            if CapsLock.isPressed {
+                ModeIndicator.shared.showCaps()          // 길게: 대문자 고정 유지
+            } else {
+                capsIgnoreNext = true                     // 짧게: 대문자 고정 되돌리고 한/영
+                CapsLock.set(false)
+                toggleMode(sender)
+            }
+        }
+        check()
     }
 
     private func onTap(_ keyCode: UInt16, _ sender: Any!) {
