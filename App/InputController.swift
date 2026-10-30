@@ -141,7 +141,10 @@ final class InputController: IMKInputController {
 
     /// 누른 키의 ASCII(0x21~0x7E). Caps Lock은 1단계에선 무시하고 Shift만 반영.
     private func asciiOf(_ event: NSEvent) -> Int? {
-        guard let s = event.charactersIgnoringModifiers, s.unicodeScalars.count == 1,
+        // charactersIgnoringModifiers는 입력기 쪽에서 Shift까지 빼버림(Shift+1 → "1") → characters 사용.
+        // Cmd/Ctrl/Option 조합은 이 함수 전에 걸러지므로 여기선 Shift·Caps Lock만 반영됨.
+        keyLog.debug("key code=\(event.keyCode, privacy: .public) chars=\(event.characters ?? "", privacy: .public) ign=\(event.charactersIgnoringModifiers ?? "", privacy: .public)")
+        guard let s = event.characters, s.unicodeScalars.count == 1,
               var c = s.unicodeScalars.first?.value else { return nil }
         let shift = event.modifierFlags.contains(.shift)
         if c >= 0x41 && c <= 0x5a && !shift { c += 0x20 }       // Caps Lock 대문자 → 소문자
