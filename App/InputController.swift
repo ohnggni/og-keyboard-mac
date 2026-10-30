@@ -14,6 +14,7 @@ enum ModeState {
 private enum Key {
     static let delete: UInt16 = 51
     static let space: UInt16 = 49
+    static let rightCommand: UInt16 = 54
     static let rightOption: UInt16 = 61
 }
 
@@ -21,9 +22,9 @@ private enum Key {
 final class InputController: IMKInputController {
 
     private let engine = HangulEngine()
-    /// 오른쪽 Option을 누른 채 다른 키를 눌렀는지 (그랬으면 뗄 때 전환하지 않음)
-    private var rightOptionDown = false
-    private var rightOptionUsed = false
+    /// 눌려 있는 '단독 탭' 후보 수식키(오른쪽 Command/Option). 누른 채 다른 키를 쓰면 tapUsed → 뗄 때 무시
+    private var tapKey: UInt16? = nil
+    private var tapUsed = false
 
     // MARK: 시스템 콜백
 
@@ -35,7 +36,7 @@ final class InputController: IMKInputController {
         // 키 → 글자 변환을 US 배열로 고정 (자판 표가 US 기준)
         (sender as? IMKTextInput)?.overrideKeyboard(withKeyboardNamed: "com.apple.keylayout.US")
         engine.dubeol = ModeState.layout.dubeol
-        rightOptionDown = false
+        tapKey = nil
     }
 
     override func deactivateServer(_ sender: Any!) {
@@ -51,7 +52,7 @@ final class InputController: IMKInputController {
         if event.type == .flagsChanged { return handleFlags(event, sender) }
         if event.type != .keyDown { return false }
 
-        if rightOptionDown { rightOptionUsed = true }
+        if tapKey != nil { tapUsed = true }
 
         // Cmd/Ctrl/Option 조합 단축키: 조합 확정 후 앱으로
         let mods = event.modifierFlags.intersection([.command, .control, .option])
@@ -96,24 +97,36 @@ final class InputController: IMKInputController {
         return true
     }
 
-    // MARK: 오른쪽 Option 짧게 = 한/영
+    // MARK: 단독 탭: 오른쪽 Command = 한/영, 오른쪽 Option = 한자(예정)
 
     private func handleFlags(_ event: NSEvent, _ sender: Any!) -> Bool {
         keyLog.info("flags keyCode=\(event.keyCode, privacy: .public) raw=0x\(String(event.modifierFlags.rawValue, radix: 16), privacy: .public)")
-        guard event.keyCode == Key.rightOption else {
-            if rightOptionDown { rightOptionUsed = true }
+        // 입력기로 오는 이벤트엔 좌우 구분 비트가 빠져 있음 → 키 코드로 오른쪽을 구분하고 수식 비트로 누름/뗌 판단
+        let flag: NSEvent.ModifierFlags
+        switch event.keyCode {
+        case Key.rightCommand: flag = .command
+        case Key.rightOption: flag = .option
+        default:
+            if tapKey != nil { tapUsed = true }
             return false
         }
-        // 입력기로 오는 이벤트엔 좌우 구분 비트가 빠져 있음 → 키 코드(61)로 오른쪽을 구분하고 Option 비트로 누름/뗌 판단
-        let down = event.modifierFlags.contains(.option)
-        if down {
-            rightOptionDown = true
-            rightOptionUsed = false
-        } else if rightOptionDown {
-            rightOptionDown = false
-            if !rightOptionUsed { toggleMode(sender) }
+        if event.modifierFlags.contains(flag) {
+            if tapKey != nil { tapUsed = true }   // 다른 탭 키를 누른 채 눌렀으면 둘 다 무효
+            else { tapKey = event.keyCode; tapUsed = false }
+        } else if tapKey == event.keyCode {
+            let used = tapUsed
+            tapKey = nil
+            if !used { onTap(event.keyCode, sender) }
         }
         return false
+    }
+
+    private func onTap(_ keyCode: UInt16, _ sender: Any!) {
+        switch keyCode {
+        case Key.rightCommand: toggleMode(sender)
+        case Key.rightOption: keyLog.info("한자 키 (아직 미구현)")
+        default: break
+        }
     }
 
     private func toggleMode(_ sender: Any!) {
