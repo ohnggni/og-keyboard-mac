@@ -80,7 +80,7 @@ final class StatusBar: NSObject {
     // MARK: 메뉴
 
     private enum Tag {
-        static let remember = 1, terminal = 2, clipOn = 3, fallback = 4, appName = 5, header = 10, keepBase = 100
+        static let remember = 1, terminal = 2, clipOn = 3, fallback = 4, appName = 5, autoEnglish = 6, header = 10, secure = 11, keepBase = 100
     }
 
     private func makeMenu() -> NSMenu {
@@ -92,6 +92,10 @@ final class StatusBar: NSObject {
         headerItem = header
         fillHeader(header)
         menu.addItem(header)
+        let secure = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        secure.tag = Tag.secure
+        secure.isHidden = true
+        menu.addItem(secure)
         menu.addItem(.separator())
 
         // 자판
@@ -135,6 +139,7 @@ final class StatusBar: NSObject {
         memory.addItem(item("앱마다 마지막 한/영 기억", #selector(toggleRemember), tag: Tag.remember))
         memory.addItem(item("기억 지우기", #selector(clearRemember), symbol: "trash"))
         menu.addItem(sub("앱별 한/영 기억", symbol: "arrow.triangle.2.circlepath", memory))
+        menu.addItem(item("로그인 칸에서 자동 영문", #selector(toggleAutoEnglish), tag: Tag.autoEnglish, symbol: "key"))
         menu.addItem(.separator())
 
         menu.addItem(item("사용법…", #selector(openHelp), symbol: "book"))
@@ -217,6 +222,8 @@ final class StatusBar: NSObject {
                     .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
                     .foregroundColor: NSColor.secondaryLabelColor,
                 ])
+            case Tag.secure: fillSecure(mi)
+            case Tag.autoEnglish: mi.state = FieldWatcher.enabled ? .on : .off
             case Tag.remember: mi.state = ModeState.rememberPerApp ? .on : .off
             case Tag.clipOn: mi.state = ClipboardHistory.shared.enabled ? .on : .off
             case Tag.terminal:
@@ -238,6 +245,22 @@ final class StatusBar: NSObject {
     @objc private func selectLayout(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String else { return }
         ModeState.layout = Layouts.byId(id)
+    }
+
+    @objc private func toggleAutoEnglish() { FieldWatcher.enabled.toggle() }
+
+    /// 보안 입력이 켜져 있으면 경고 줄을 보여준다 (비밀번호 칸 밖인데 한글이 안 될 때의 원인)
+    private func fillSecure(_ mi: NSMenuItem) {
+        guard let h = SecureInput.holder else { mi.isHidden = true; return }
+        mi.isHidden = false
+        mi.isEnabled = true
+        let s = NSMutableAttributedString(string: "⚠️  보안 입력 켜짐 · \(h.localizedName ?? "알 수 없는 앱")", attributes: [
+            .font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: ModeIndicator.orange,
+        ])
+        s.append(NSAttributedString(string: "\n      비밀번호 칸이 아닌데도 한글이 안 되면 이 앱을 종료하십시오", attributes: [
+            .font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.secondaryLabelColor,
+        ]))
+        mi.attributedTitle = s
     }
 
     @objc private func toggleRemember() { ModeState.rememberPerApp.toggle() }

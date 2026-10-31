@@ -8,9 +8,12 @@ let keyLog = Logger(subsystem: "kr.ogapp.inputmethod.OGKeyboard", category: "key
 enum ModeState {
     private static let defaults = UserDefaults.standard
 
+    /// 잠깐 바꾸는 것(로그인 칸 자동 영문 등)은 앱별 기억에 남기지 않는다
+    static var transient = false
+
     static var hangul = true {
         didSet {
-            if rememberPerApp, let app = currentApp, appModes[app] != hangul {
+            if !transient, rememberPerApp, let app = currentApp, appModes[app] != hangul {
                 appModes[app] = hangul
                 defaults.set(appModes, forKey: "appModes")
             }
@@ -39,6 +42,18 @@ enum ModeState {
         guard rememberPerApp, let app = app, let saved = appModes[app], saved != hangul else { return }
         hangul = saved
         keyLog.info("앱 \(app, privacy: .public) → \(saved ? "한글" : "영문", privacy: .public)")
+    }
+
+    static func hasSaved(_ app: String?) -> Bool {
+        guard let app = app else { return false }
+        return appModes[app] != nil
+    }
+
+    /// 기억에 남기지 않고 한/영 바꾸기
+    static func setTransient(hangul h: Bool) {
+        transient = true
+        hangul = h
+        transient = false
     }
 
     static func clearAppModes() {
