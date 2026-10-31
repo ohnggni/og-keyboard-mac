@@ -3,6 +3,7 @@
 // 입력한 내용(값)은 출력하지 않는다.
 import Cocoa
 import ApplicationServices
+import Carbon
 
 guard AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary) else {
     print("이 터미널 앱에 손쉬운 사용 권한이 필요합니다 (시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용). 켠 뒤 다시 실행하십시오.")
