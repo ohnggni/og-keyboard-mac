@@ -26,6 +26,11 @@ enum FieldWatcher {
         "com.naver.Whale", "company.thebrowser.Browser", "com.vivaldi.Vivaldi", "org.chromium.Chromium",
     ]
     private static var manualEnabled = Set<pid_t>()
+    /// 앱에 칸 정보를 묻는 일은 여기서만 한다. 입력기 본체(메인 스레드)가 그 앱을 기다리며 멈추지 않게
+    /// (그 앱도 입력기의 답을 기다리는 중이라 메인에서 물으면 서로 기다려 클릭이 늦어짐)
+    private static let queue = DispatchQueue(label: "kr.ogapp.fieldwatcher", qos: .userInitiated)
+    /// 한 번 물을 때 최대 대기 시간
+    private static let timeout: Float = 0.25
 
     static func start() {
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -47,9 +52,10 @@ enum FieldWatcher {
               app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
         let pid = app.processIdentifier
         let axApp = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(axApp, timeout)
         if let id = app.bundleIdentifier, chromium.contains(id), !manualEnabled.contains(pid) {
-            AXUIElementSetAttributeValue(axApp, "AXManualAccessibility" as CFString, kCFBooleanTrue)
             manualEnabled.insert(pid)
+            queue.async { AXUIElementSetAttributeValue(axApp, "AXManualAccessibility" as CFString, kCFBooleanTrue) }
         }
         var obs: AXObserver?
         guard AXObserverCreate(pid, { _, element, _, _ in FieldWatcher.focusChanged(element) }, &obs) == .success,
@@ -57,16 +63,30 @@ enum FieldWatcher {
         AXObserverAddNotification(o, axApp, kAXFocusedUIElementChangedNotification as CFString, nil)
         CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(o), .defaultMode)
         observer = o
-        // 지금 포커스된 칸도 바로 확인
-        var f: CFTypeRef?
-        if AXUIElementCopyAttributeValue(axApp, kAXFocusedUIElementAttribute as CFString, &f) == .success, let f = f {
-            focusChanged(f as! AXUIElement)
+        // 지금 포커스된 칸도 확인 (작업 줄에서)
+        queue.async {
+            var f: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(axApp, kAXFocusedUIElementAttribute as CFString, &f) == .success,
+                  let f = f else { return }
+            classify(f as! AXUIElement)
         }
     }
 
+    /// 포커스가 바뀌었다는 알림(메인): 칸 알아보기는 작업 줄로 넘긴다
     private static func focusChanged(_ e: AXUIElement) {
-        guard enabled, InputSources.ogIsCurrent else { return }
+        guard enabled else { return }
+        queue.async { classify(e) }
+    }
+
+    /// 작업 줄: 칸 종류를 알아보고 결과만 메인으로
+    private static func classify(_ e: AXUIElement) {
+        AXUIElementSetMessagingTimeout(e, timeout)
         let english = isEnglishField(e)
+        DispatchQueue.main.async { apply(english) }
+    }
+
+    private static func apply(_ english: Bool) {
+        guard enabled, InputSources.ogIsCurrent else { return }
         if english && !inEnglishField {
             inEnglishField = true
             if ModeState.hangul {
@@ -121,7 +141,9 @@ enum FieldWatcher {
         var label = ""
         var t: CFTypeRef?
         if AXUIElementCopyAttributeValue(e, "AXTitleUIElement" as CFString, &t) == .success, let te = t {
-            label = str(te as! AXUIElement, "AXValue") ?? str(te as! AXUIElement, "AXTitle") ?? ""
+            let el = te as! AXUIElement
+            AXUIElementSetMessagingTimeout(el, timeout)
+            label = str(el, "AXValue") ?? str(el, "AXTitle") ?? ""
         }
         let text = [str(e, "AXTitle"), str(e, "AXDescription"), str(e, "AXPlaceholderValue"), label]
             .compactMap { $0 }.joined(separator: " ").lowercased()
