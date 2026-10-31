@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff; --fg: #1d1d1f; --sub: #6e6e73; --card: #f5f5f7; --accent: #2563eb;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1e1e20; --fg: #f2f2f4; --sub: #a1a1a8; --card: #2a2a2d; --accent: #6aa0ff; }
+}
+body {
+  margin: 0; padding: 28px 28px 24px; text-align: center;
+  font: 13px/1.6 -apple-system, "Apple SD Gothic Neo", sans-serif;
+  color: var(--fg); background: var(--bg);
+}
+img { width: 96px; height: 96px; }
+h1 { margin: 8px 0 0; font-size: 21px; font-weight: 700; }
+.ver { color: var(--sub); margin: 2px 0 16px; }
+.card {
+  background: var(--card); border-radius: 12px; padding: 12px 16px; margin: 10px 0;
+  text-align: left;
+}
+.card b { display: block; margin-bottom: 2px; }
+.card p { margin: 0; color: var(--sub); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.btn {
+  display: inline-block; margin-top: 8px; padding: 5px 14px; border-radius: 7px;
+  background: var(--card); color: var(--fg); font-weight: 600;
+}
+</style>
+</head>
+<body>
+  <img src="{{ICON}}" alt="">
+  <h1>OG키보드</h1>
+  <div class="ver">버전 {{VERSION}} (빌드 {{BUILD}})</div>
+
+  <div class="card">
+    <b>⌨️ 맥용 한글 입력기</b>
+    <p>세벌식 390 · 391 · 순아래, 두벌식 · 모아치기 · 한자 · 바로잡기 · 단축어 · 클립보드 기록</p>
+  </div>
+  <div class="card">
+    <b>👤 개발자</b>
+    <p>JSLee · <a href="mailto:og.app.developer@gmail.com">og.app.developer@gmail.com</a></p>
+  </div>
+  <div class="card">
+    <b>🔒 개인정보</b>
+    <p>입력한 글자, 클립보드 기록, 설정은 이 맥 안에만 저장되고 어디로도 보내지 않아요.</p>
+  </div>
+  <div class="card">
+    <b>📦 포함한 오픈소스</b>
+    <p>libhangul 자판 (LGPL-2.1) · libhangul 한자 사전 (BSD-3-Clause) · Unicode CLDR (Unicode-3.0) · emojibase (MIT)</p>
+  </div>
+
+  <a class="btn" href="og://licenses">라이선스 보기</a>
+</body>
+</html>
