@@ -1,0 +1,59 @@
+# 태그(v0.4.0 등)를 올리면 맥에서 테스트·빌드하고 릴리스에 OGKeyboard.zip 을 올린다
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 빌드 번호 = 커밋 수
+
+      - name: Swift 버전
+        run: swift --version
+
+      - name: 조합기 테스트
+        run: swift test
+
+      - name: 빌드
+        run: ./build.sh
+
+      - name: 묶기
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent build/OGKeyboard.app OGKeyboard.zip
+          shasum -a 256 OGKeyboard.zip | tee OGKeyboard.zip.sha256
+
+      - name: 릴리스 만들기
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          cat > notes.md <<NOTES
+          ## 설치
+          터미널에서 한 줄:
+          \`\`\`
+          curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/install.sh | bash
+          \`\`\`
+          자세한 설치·권한 안내는 [README](https://github.com/${GITHUB_REPOSITORY}#readme)를 참고하십시오.
+
+          - 애플 실리콘 맥, macOS 13 이상
+          - 업데이트 후에는 손쉬운 사용·입력 모니터링 권한을 다시 켜야 할 수 있습니다 (README의 '업데이트' 참고)
+          NOTES
+          gh release create "$GITHUB_REF_NAME" OGKeyboard.zip OGKeyboard.zip.sha256 \
+            --title "OG키보드 $VER" --notes-file notes.md
+
+      - name: 결과물 보관 (수동 실행 시)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: OGKeyboard
+          path: OGKeyboard.zip

@@ -25,30 +25,7 @@ echo "▶ 2/5 조합기 테스트"
 swift test 2>&1 | grep -E "Executed .* tests|error:|failed" | head -5
 
 echo "▶ 3/5 빌드"
-rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-swiftc -O -swift-version 5 -target arm64-apple-macos13.0 -module-name $NAME \
-  Sources/HangulCore/*.swift App/*.swift \
-  -framework Cocoa -framework InputMethodKit -framework Carbon -framework IOKit -framework WebKit \
-  -o "$APP/Contents/MacOS/$NAME"
-cp App/Info.plist "$APP/Contents/"
-/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(git rev-list --count HEAD)" "$APP/Contents/Info.plist"
-cp App/Resources/*.dat "$APP/Contents/Resources/"
-cp App/Resources/emoji_groups.txt "$APP/Contents/Resources/"
-cp App/Resources/*.html App/Resources/help-icon.png "$APP/Contents/Resources/"
-iconutil -c icns App/Resources/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
-mkdir -p "$APP/Contents/Resources/licenses" && cp licenses/*.txt "$APP/Contents/Resources/licenses/"
-cp -R App/Resources/*.lproj "$APP/Contents/Resources/"
-tiffutil -cathidpicheck App/Resources/icon.png App/Resources/icon@2x.png \
-  -out "$APP/Contents/Resources/icon.tiff" >/dev/null 2>&1
-# 고정 서명이 있으면 사용 (임시 서명은 빌드마다 바뀌어 손쉬운 사용 권한이 풀림)
-IDENTITY="OGKeyboard Dev"
-if security find-identity -p codesigning 2>/dev/null | grep -q "\"$IDENTITY\""; then
-  codesign --force --sign "$IDENTITY" "$APP"
-else
-  codesign --force --sign - "$APP"
-  echo "  (임시 서명: '$IDENTITY' 인증서가 없어 손쉬운 사용 권한이 빌드마다 풀림)"
-fi
+./build.sh
 
 echo "▶ 4/5 설치"
 pkill -x "$NAME" 2>/dev/null || true
