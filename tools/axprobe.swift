@@ -1,5 +1,5 @@
 // 커서가 있는 입력칸의 손쉬운 사용 정보를 출력 (이메일·비밀번호 칸 자동 영문 전환 가능성 확인용)
-// 실행: swift tools/axprobe.swift  (Ctrl+C로 끝). 실행한 터미널 앱에 손쉬운 사용 권한 필요.
+// 실행: swift tools/axprobe.swift [--all]  (Ctrl+C로 끝). --all: 칸의 모든 속성을 출력. 실행한 터미널 앱에 손쉬운 사용 권한 필요.
 // 입력한 내용(값)은 출력하지 않는다.
 import Cocoa
 import ApplicationServices
@@ -43,6 +43,17 @@ Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { _ in
         if let v = attr(te as! AXUIElement, "AXValue") ?? attr(te as! AXUIElement, "AXTitle") { parts.append("Label=\(v)") }
     }
     parts.append("SecureInput=\(IsSecureEventInputEnabled() ? "켜짐" : "꺼짐")")
+    if CommandLine.arguments.contains("--all") {
+        // 모든 속성 이름과 짧은 값 (입력한 내용인 AXValue·AXSelectedText는 빼고)
+        var names: CFArray?
+        if AXUIElementCopyAttributeNames(e, &names) == .success, let ns = names as? [String] {
+            for n in ns.sorted() where !["AXValue", "AXSelectedText", "AXSelectedTextRange", "AXVisibleCharacterRange",
+                                          "AXChildren", "AXParent", "AXWindow", "AXTopLevelUIElement", "AXFrame",
+                                          "AXPosition", "AXSize", "AXNumberOfCharacters", "AXInsertionPointLineNumber"].contains(n) {
+                if let v = attr(e, n), !parts.contains(where: { $0.hasPrefix(n.dropFirst(2) + "=") }) { parts.append("\(n.dropFirst(2))=\(v)") }
+            }
+        }
+    }
     let line = "[\(app.bundleIdentifier ?? "?")] " + parts.joined(separator: " | ")
     if line != last { print(line); fflush(stdout); last = line }
 }

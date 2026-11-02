@@ -139,7 +139,7 @@ final class StatusBar: NSObject {
         memory.addItem(item("앱마다 마지막 한/영 기억", #selector(toggleRemember), tag: Tag.remember))
         memory.addItem(item("기억 지우기", #selector(clearRemember), symbol: "trash"))
         menu.addItem(sub("앱별 한/영 기억", symbol: "arrow.triangle.2.circlepath", memory))
-        menu.addItem(item("로그인 칸에서 자동 영문", #selector(toggleAutoEnglish), tag: Tag.autoEnglish, symbol: "key"))
+        menu.addItem(item("영문·숫자 칸에서 자동 영문", #selector(toggleAutoEnglish), tag: Tag.autoEnglish, symbol: "key"))
         menu.addItem(.separator())
 
         menu.addItem(item("사용법…", #selector(openHelp), symbol: "book"))

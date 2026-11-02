@@ -2,7 +2,7 @@ import Cocoa
 import Carbon
 import ApplicationServices
 
-/// 로그인 칸 자동 영문: 아이디·이메일·비밀번호 칸에 들어가면 영문으로, 나오면 원래대로.
+/// 영문·숫자 칸 자동 영문: 아이디·이메일·비밀번호·전화·카드·날짜·인증번호 칸 등에 들어가면 영문으로, 나오면 원래대로.
 /// 손쉬운 사용 정보로 지금 포커스된 칸을 알아본다 (권한 필요). 주소창·검색창은 건드리지 않는다.
 enum FieldWatcher {
     static var enabled: Bool {
@@ -95,7 +95,7 @@ enum FieldWatcher {
                 autoSwitched = true
                 switchedApp = ModeState.currentApp
                 ModeIndicator.shared.show(hangul: false)
-                keyLog.info("로그인 칸 → 영문")
+                keyLog.info("영문 칸 → 영문")
             }
         } else if !english && inEnglishField {
             inEnglishField = false
@@ -109,7 +109,7 @@ enum FieldWatcher {
         if !ModeState.hangul {
             ModeState.setTransient(hangul: true)
             ModeIndicator.shared.show(hangul: true)
-            keyLog.info("로그인 칸 나감 → 한글")
+            keyLog.info("영문 칸 나감 → 한글")
         }
     }
 
@@ -126,32 +126,27 @@ enum FieldWatcher {
 
     // MARK: 칸 알아보기
 
-    private static let koreanWords = ["이메일", "메일", "아이디", "비밀번호", "계정", "사용자 이름"]
-    private static let englishWords = ["email", "e-mail", "password", "passwd", "username", "user name", "login", "account"]
-    private static let tokens: Set<String> = ["id", "pw", "uid", "userid", "loginid", "email", "mail", "account", "passwd", "password", "login", "username"]
-
+    /// 칸 정보를 모아 규칙(HangulCore/FieldRules)으로 판단
     static func isEnglishField(_ e: AXUIElement) -> Bool {
-        let sub = str(e, kAXSubroleAttribute as String)
-        if sub == "AXSecureTextField" { return true }
-        guard str(e, kAXRoleAttribute as String) == "AXTextField", sub != "AXSearchField" else { return false }
-        let ident = str(e, "AXIdentifier") ?? ""
-        let cls = str(e, "AXDOMClassList") ?? ""
-        if ident.contains("ADDRESS") || ident.contains("SEARCH") || cls.contains("Omnibox") { return false }
-
-        var label = ""
+        var label: String?
         var t: CFTypeRef?
         if AXUIElementCopyAttributeValue(e, "AXTitleUIElement" as CFString, &t) == .success, let te = t {
             let el = te as! AXUIElement
             AXUIElementSetMessagingTimeout(el, timeout)
-            label = str(el, "AXValue") ?? str(el, "AXTitle") ?? ""
+            label = str(el, "AXValue") ?? str(el, "AXTitle")
         }
-        let text = [str(e, "AXTitle"), str(e, "AXDescription"), str(e, "AXPlaceholderValue"), label]
-            .compactMap { $0 }.joined(separator: " ").lowercased()
-        if text.contains("검색") || text.contains("search") { return false }
-        if koreanWords.contains(where: text.contains) || englishWords.contains(where: text.contains) { return true }
-        let words = (text + " " + (str(e, "AXDOMIdentifier") ?? "").lowercased())
-            .split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
-        return words.contains(where: tokens.contains)
+        let f = FieldRules.Field(
+            role: str(e, kAXRoleAttribute as String),
+            subrole: str(e, kAXSubroleAttribute as String),
+            roleDescription: str(e, kAXRoleDescriptionAttribute as String),
+            texts: [str(e, "AXTitle"), str(e, "AXDescription"), str(e, "AXHelp"), label].compactMap { $0 },
+            placeholder: str(e, "AXPlaceholderValue"),
+            domIdentifier: str(e, "AXDOMIdentifier"),
+            identifier: str(e, "AXIdentifier"),
+            classList: str(e, "AXDOMClassList"))
+        let english = FieldRules.isEnglish(f)
+        keyLog.debug("칸: \(String(describing: f), privacy: .public) → \(english ? "영문" : "그대로", privacy: .public)")
+        return english
     }
 
     private static func str(_ e: AXUIElement, _ name: String) -> String? {
