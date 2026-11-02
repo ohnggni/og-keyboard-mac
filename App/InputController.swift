@@ -38,6 +38,9 @@ enum ModeState {
 
     /// 입력창이 활성화될 때: 그 앱의 마지막 한/영으로. 처음 보는 앱은 지금 상태 그대로.
     static func activate(app: String?) {
+        // 같은 앱 안에서 칸만 옮긴 경우(사파리는 칸마다 입력기를 다시 시작함)는 건드리지 않는다.
+        // 그러지 않으면 영문 칸 자동 전환 같은 잠깐의 상태가 앱 기억으로 덮어써진다.
+        guard app != currentApp else { return }
         currentApp = app
         guard rememberPerApp, let app = app, let saved = appModes[app], saved != hangul else { return }
         hangul = saved

@@ -50,6 +50,28 @@ final class FieldRulesTests: XCTestCase {
         en(web(["웹사이트 주소"]))
     }
 
+    /// 브라우저가 알려주는 칸 종류 (실제 측정값: 사파리·크롬·엣지, 한국어·영어 맥)
+    func testInputTypeFromRoleDescription() {
+        func typed(_ desc: String, role: String = "AXTextField") -> FieldRules.Field {
+            FieldRules.Field(role: role, roleDescription: desc)
+        }
+        en(typed("전화번호 필드"))      // 사파리 tel
+        en(typed("숫자 필드"))          // 사파리 number
+        en(typed("이메일 필드"))        // 사파리 email
+        en(typed("URL 필드"))           // 사파리 url
+        en(typed("전화번호"))           // 크롬 tel
+        en(typed("이메일"))             // 크롬 email
+        en(typed("URL"))                // 크롬 url
+        en(typed("증감자", role: "AXIncrementor"))   // 크롬 number·date
+        en(typed("스테퍼", role: "AXIncrementor"))   // 사파리 date
+        en(typed("telephone field"))
+        en(typed("number field"))
+        en(typed("email field"))
+        ko(typed("텍스트 필드"))
+        ko(typed("text field"))
+        ko(FieldRules.Field(role: "AXTextField", subrole: "AXSearchField", roleDescription: "텍스트 필드 검색"))
+    }
+
     func testStaysKorean() {
         ko(web(["이름"], id: "name"))
         ko(web(["주소"], id: "addr1"))

@@ -63,6 +63,14 @@ public enum FieldRules {
         "ssn", "rrn", "jumin", "bizno", "acct", "bank",
     ]
 
+    /// 브라우저가 칸 종류를 '역할 설명'으로 알려주는 경우 (input type=tel·number·email·url).
+    /// 사파리: "전화번호 필드", "숫자 필드", "이메일 필드", "URL 필드" / 크롬·엣지: "전화번호", "이메일", "URL"
+    /// 맥 언어가 영어면 "telephone field", "number field", "email field", "URL field" 등
+    static let typeDescriptions: [String] = [
+        "전화번호", "숫자 필드", "이메일", "url",
+        "telephone", "phone", "number field", "email", "e-mail",
+    ]
+
     /// 이 낱말이 있으면 영문 칸이 아님 (검색창, 이름, 한글 주소 등)
     static let excludes: [String] = ["검색", "search", "받는 분", "받는분", "메시지", "message", "메모", "제목", "내용", "댓글"]
 
@@ -73,6 +81,10 @@ public enum FieldRules {
         // 브라우저 주소창
         let ident = f.identifier ?? "", cls = f.classList ?? ""
         if ident.contains("ADDRESS") || ident.contains("SEARCH") || cls.contains("Omnibox") { return false }
+
+        // 웹페이지가 칸 종류를 밝힌 경우가 가장 확실 (윈도우와 같은 기준)
+        let desc = (f.roleDescription ?? "").lowercased()
+        if typeDescriptions.contains(where: desc.contains) { return true }
 
         let text = (f.texts + [f.placeholder ?? "", f.roleDescription ?? ""]).joined(separator: " ").lowercased()
         if excludes.contains(where: text.contains) { return false }
