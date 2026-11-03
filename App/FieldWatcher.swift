@@ -9,15 +9,16 @@ enum FieldWatcher {
         get { UserDefaults.standard.object(forKey: "autoEnglishFields") as? Bool ?? true }
         set {
             UserDefaults.standard.set(newValue, forKey: "autoEnglishFields")
-            if !newValue, autoSwitched { restore() }
+            if !newValue { restore() }
             watch(NSWorkspace.shared.frontmostApplication)
         }
     }
 
     private static var observer: AXObserver?
-    private static var inEnglishField = false
-    /// 우리가 영문으로 바꿔 둔 상태인지, 어느 앱에서였는지
-    private static var autoSwitched = false
+    /// 마지막으로 본 칸 (같은 칸에 대한 알림이 여러 번 와도 한 번만 처리)
+    private static var lastElement: AXUIElement?
+    /// 영문 칸에 처음 들어가기 직전의 한/영. 영문 칸들을 다 벗어나면 이것으로 되돌린다 (nil = 바꾼 적 없음)
+    private static var originalHangul: Bool?
     private static var switchedApp: String?
 
     /// 크롬 계열은 이 값을 켜야 웹페이지 입력칸 정보를 넘겨준다
@@ -82,45 +83,50 @@ enum FieldWatcher {
     private static func classify(_ e: AXUIElement) {
         AXUIElementSetMessagingTimeout(e, timeout)
         let english = isEnglishField(e)
-        DispatchQueue.main.async { apply(english) }
+        DispatchQueue.main.async { apply(e, english) }
     }
 
-    private static func apply(_ english: Bool) {
+    /// 칸마다 따로 판단한다 (윈도우와 같은 방식):
+    ///  - 영문 칸에 들어올 때마다 그 칸은 영문으로 시작. 칸 안에서 직접 한글로 바꾸면 그 칸에서만 존중
+    ///  - 영문 칸들을 다 벗어나 일반 칸으로 가면, 처음 영문 칸에 들어오기 직전 상태로 되돌림
+    private static func apply(_ e: AXUIElement, _ english: Bool) {
         guard enabled, InputSources.ogIsCurrent else { return }
-        if english && !inEnglishField {
-            inEnglishField = true
-            if ModeState.hangul {
-                InputController.active?.commit(nil)
-                ModeState.setTransient(hangul: false)
-                autoSwitched = true
+        if let last = lastElement, CFEqual(last, e) { return }
+        lastElement = e
+        if english {
+            // 영문 칸 묶음의 시작: 그 직전 상태를 기억 (원래 영문이었으면 나갈 때도 영문 그대로)
+            if originalHangul == nil {
+                originalHangul = ModeState.hangul
                 switchedApp = ModeState.currentApp
-                ModeIndicator.shared.show(hangul: false)
-                keyLog.info("영문 칸 → 영문")
             }
-        } else if !english && inEnglishField {
-            inEnglishField = false
-            if autoSwitched { restore() }
+            guard ModeState.hangul else { return }
+            InputController.active?.commit(nil)
+            ModeState.setTransient(hangul: false)
+            ModeIndicator.shared.show(hangul: false)
+            keyLog.info("영문 칸 → 영문")
+        } else {
+            restore()
         }
     }
 
-    /// 칸을 나가면 한글로 되돌린다 (칸 안에서 직접 한글로 바꿨으면 이미 한글이라 그대로)
+    /// 영문 칸에 들어오기 직전 상태로 되돌린다
     private static func restore() {
-        autoSwitched = false
-        if !ModeState.hangul {
-            ModeState.setTransient(hangul: true)
-            ModeIndicator.shared.show(hangul: true)
-            keyLog.info("영문 칸 나감 → 한글")
-        }
+        guard let orig = originalHangul else { return }
+        originalHangul = nil
+        guard ModeState.hangul != orig else { return }
+        ModeState.setTransient(hangul: orig)
+        ModeIndicator.shared.show(hangul: orig)
+        keyLog.info("영문 칸 나감 → \(orig ? "한글" : "영문", privacy: .public)")
     }
 
-    /// 앱이 바뀔 때: 새 앱의 한/영은 앱별 기억이 정한다. 기억이 없으면 원래(한글)로.
+    /// 앱이 바뀔 때: 새 앱의 한/영은 앱별 기억이 정한다. 기억이 없으면 원래대로.
     private static func leaveOnAppChange() {
-        inEnglishField = false
-        guard autoSwitched else { return }
-        autoSwitched = false
+        lastElement = nil
+        guard let orig = originalHangul else { return }
+        originalHangul = nil
         let now = ModeState.currentApp
         if now == switchedApp || !ModeState.hasSaved(now) {
-            if !ModeState.hangul { ModeState.setTransient(hangul: true) }
+            if ModeState.hangul != orig { ModeState.setTransient(hangul: orig) }
         }
     }
 
