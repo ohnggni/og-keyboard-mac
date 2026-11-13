@@ -45,7 +45,7 @@ enum CommitGuard {
 
     /// 조합 중인 글자가 있으면 지금 칸에 확정 (한자·이모지 창이 열려 있으면 그 창이 처리하므로 건드리지 않음)
     private static func flush() {
-        guard let c = InputController.active, !c.engine.isEmpty,
+        guard let c = InputController.active, c.hasComposition,
               c.hanja == nil, c.emojiSession == nil else { return }
         c.commit(nil)
         keyLog.debug("클릭·⌘ 전에 조합 글자 확정")

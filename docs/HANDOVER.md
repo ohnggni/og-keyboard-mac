@@ -68,7 +68,11 @@
 - [ ] B7. MistypeChain 전역 상태가 앱 전환에도 유지됨
 - [ ] B10. FieldRules 오탐 여지 (제외어 검사 범위 vs domIdentifier 토큰)
 - [ ] B11. `NSScreen.screens[0]` 강제 접근 (CandidatePanel·EmojiPanel)
-- [ ] B12. Termix에서 Shift+기호 키가 raw로 입력됨 — **원인 확정 (2026-11-13 실기 진단)**: DIAG 로그상 입력기는 `<`를 받아 `2`로 변환하고 insertText까지 정상 수행했는데도(v=50/51, hangul=true) Termix 화면엔 `<`가 찍힘. Termix가 Shift 키 이벤트에서는 입력기가 넣은 글자를 받지 않고 자체 키 처리를 우선하는 앱 쪽 동작으로 결론. 입력기 API로 강제할 방법이 없어 보류 — 우회: Termix에서 2·3은 영문 모드 숫자 행으로 입력. DIAG 로그는 제거함
+- [ ] B12. Termix에서 일부 기호 키가 원래 글자로 입력됨 (390의 Shift+쉼표·마침표 → `<` `>`) — **원인 재확정·우회 구현 (2026-11-14, 실기 확인 필요)**.
+  - 원인: Termix는 네이티브가 아니라 **Electron + xterm.js**. 입력기가 조합 글자 없이 1자만 넣으면 Chromium(`render_widget_host_view_cocoa.mm` keyEvent)이 원래 키 정보(key=`<`)로 keydown을 보내고 넣은 글자(`2`)는 keypress로 보낸다. xterm.js `_keyDown`은 한 글자 키를 `ev.key`로 바로 셸에 보내고 keypress를 버린다. 단 key가 A~Z 대문자면 keypress로 미루는 HACK이 있어서 Shift+M(→1)·J(→4)는 정상이었던 것 (11-13 진단의 "Shift 키만 깨짐" 구분은 틀림 — M·J도 Shift 키).
+  - 예측(실기로 확인할 것): ① 한글 조합 중(밑줄) 바로 뒤의 Shift+쉼표는 정상 (조합 글자가 있으면 Chromium이 keydown을 229로 보냄) ② 391 자판은 Shift 없는 `-` `[` `]` `\` `` ` `` 등 기호 키 21개도 같은 증상.
+  - 우회: 터미널로 다루는 Chromium·Electron 앱(`Terminals` + `ChromiumApps`)에서, 자판이 기호 키를 다른 글자로 바꾸면(`LiteralHold.needsHold`) 그 글자를 바로 넣지 않고 **조합 중 글자로 걸어둔 뒤** 다음 키·확정 때 넣는다 → keydown이 229로 가서 xterm.js가 조합 경로로 받음. 걸어둔 글자는 다음 키까지 밑줄로 보이고, Backspace는 그 글자만 지운다. `commit`·`CommitGuard`는 `hasComposition`으로 걸어둔 글자까지 확정.
+  - 효과 없는 대안(기록): 같은 키 처리 안에서 setMarkedText 직후 insertText (끝날 때 marked text가 없어 Chromium 조건 불충족), 폭 0 글자 덧붙이기 (셸에 쓰레기 입력). 차선책: 합성 키 전송(KeySender) — 빠른 타이핑 때 순서 뒤바뀜 위험.
 
 ## 검증된 사실 / 결정 사항
 
@@ -86,3 +90,4 @@
 | 2026-11-12 | 진석 + Muse | 진석이 v0.4.1 릴리스를 웹에서 게시 → 태그 빌드는 성공했으나 릴리스 중복으로 자산 첨부 실패 → 릴리스 삭제 + run 재실행으로 복구 완료. v0.4.1 정식 게시 (zip·sha256·버전 확인) |
 | 2026-11-13 | Muse | B12 진단 시작: InputController에 DIAG 임시 로그 추가 (asciiOf 원본 문자·변환 결과·모드 기록). 진단 끝나면 제거할 것 |
 | 2026-11-13 | Muse | B12 진단 종료: 입력기 변환 정상·원인은 Termix 쪽으로 확정 (위 B12 항목 참고). DIAG 임시 로그 제거 |
+| 2026-11-14 | Claude | B12 크로스체크: Termix=Electron+xterm.js, 원인은 Chromium의 1자 삽입 경로 + xterm.js keydown.key 우선(A~Z만 예외)으로 재확정. 우회 구현 — Chromium 터미널에서 바뀐 기호를 조합 중 글자로 걸어둠 (`LiteralHold` + 테스트, `pendingLiteral`, `ChromiumApps`). **실기 확인 필요** (위 B12의 예측 ①② 포함) |

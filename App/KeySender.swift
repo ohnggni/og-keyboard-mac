@@ -179,3 +179,23 @@ enum Terminals {
         bundleIDs.contains(id) || userIDs.contains(id)
     }
 }
+
+/// Chromium 엔진을 쓰는 앱인지 (Electron 앱·크롬 계열). 앱 안의 프레임워크 폴더로 판단하고 결과는 기억한다.
+enum ChromiumApps {
+    private static var cache: [String: Bool] = [:]
+    private static let frameworks = ["Electron Framework.framework", "Chromium Embedded Framework.framework",
+                                     "Google Chrome Framework.framework", "Microsoft Edge Framework.framework",
+                                     "Brave Browser Framework.framework"]
+
+    static func contains(_ id: String) -> Bool {
+        if let v = cache[id] { return v }
+        var found = false
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) {
+            let dir = url.appendingPathComponent("Contents/Frameworks")
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
+            found = names.contains(where: frameworks.contains)
+        }
+        cache[id] = found
+        return found
+    }
+}

@@ -89,6 +89,10 @@ final class InputController: IMKInputController {
     var hanja: HanjaSession?
     /// 열려 있는 이모지 창 (InputController+Emoji.swift)
     var emojiSession: EmojiSession?
+    /// B12: Chromium 터미널에서 기호 키가 바꾼 글자를 조합 중 글자로 잠깐 걸어둔 것 (다음 키·확정 때 넣음)
+    var pendingLiteral = ""
+    /// 확정 안 된 글자가 있는지 (조합 중 한글 또는 걸어둔 글자)
+    var hasComposition: Bool { !engine.isEmpty || !pendingLiteral.isEmpty }
     /// 오른쪽 Option 두 번 누르기 판단용
     private var lastOptionTap: Date?
     /// 눌려 있는 '단독 탭' 후보 수식키(오른쪽 Command/Option). 누른 채 다른 키를 쓰면 tapUsed → 뗄 때 무시
@@ -133,6 +137,16 @@ final class InputController: IMKInputController {
         if event.type == .flagsChanged { return handleFlags(event, sender) }
         if event.type != .keyDown { return false }
         if KeySender.isOurs(event) { return false }   // 우리가 흉내 내 보낸 키는 그대로 통과
+
+        // B12: 걸어둔 글자가 있으면 먼저 처리. Backspace는 그 글자만 지우고, 그 밖의 키는 넣은 뒤 평소대로
+        if !pendingLiteral.isEmpty {
+            if event.keyCode == Key.delete && event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
+                pendingLiteral = ""
+                updateMarked(sender)
+                return true
+            }
+            commit(sender)
+        }
 
         if tapKey != nil { tapUsed = true }
 
@@ -201,9 +215,26 @@ final class InputController: IMKInputController {
             if !committed.isEmpty { insert(committed, sender) }
             updateMarked(sender)
         } else {
-            insert(engine.flush() + String(UnicodeScalar(UInt32(v))!), sender)
+            let literal = String(UnicodeScalar(UInt32(v))!)
+            if LiteralHold.needsHold(ascii: ascii, value: v), holdsLiterals(sender) {
+                // B12: 바꾼 기호를 바로 넣으면 Chromium 터미널(xterm.js)이 원래 키 글자를 대신 찍는다 →
+                // 조합 중 글자로 걸어둬 keydown이 '입력기 처리 중'으로 가게 하고, 다음 키·확정 때 넣는다
+                let composed = engine.flush()
+                if !composed.isEmpty { insert(composed, sender) }
+                pendingLiteral = literal
+                updateMarked(sender)
+                keyLog.debug("B12 걸어둠 \(literal, privacy: .public)")
+            } else {
+                insert(engine.flush() + literal, sender)
+            }
         }
         return true
+    }
+
+    /// B12: 바꾼 기호를 걸어둘 앱인지 — 터미널로 다루는 Chromium·Electron 앱 (Termix 등 xterm.js 기반)
+    private func holdsLiterals(_ sender: Any!) -> Bool {
+        guard let id = textClient(sender)?.bundleIdentifier() else { return false }
+        return Terminals.contains(id) && ChromiumApps.contains(id)
     }
 
     // MARK: 단독 탭: 오른쪽 Command = 한/영, 오른쪽 Option = 한자
@@ -317,14 +348,16 @@ final class InputController: IMKInputController {
     }
 
     func updateMarked(_ sender: Any!) {
-        let s = engine.composing()
+        let s = engine.composing() + pendingLiteral
         textClient(sender)?.setMarkedText(s,
             selectionRange: NSRange(location: (s as NSString).length, length: 0),
             replacementRange: NSRange(location: NSNotFound, length: NSNotFound))
     }
 
     func commit(_ sender: Any!) {
-        if engine.isEmpty { return }
-        insert(engine.flush(), sender)
+        guard hasComposition else { return }
+        let text = engine.flush() + pendingLiteral
+        pendingLiteral = ""
+        insert(text, sender)
     }
 }
