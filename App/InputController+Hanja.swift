@@ -55,7 +55,7 @@ extension InputController {
             // 선택 영역 통째로
             items = (Dicts.hanja?.lookup(t) ?? []) + (Dicts.emoji?.lookup(t) ?? [])
             replace = .selection(sel)
-            keyLog.info("한자: 선택 [\(t, privacy: .public)]")
+            keyLog.info("한자: 선택 \(t.count)자")
         } else {
             // 커서 앞 글자 읽기: 조합 중이면 조합 글자 앞, 아니면 커서 앞
             let anchor: Int? = !composing.isEmpty
@@ -86,7 +86,7 @@ extension InputController {
                 replace = .composingOnly
                 items = HanjaDict.candidates(before: composing, hanja: Dicts.hanja, emoji: Dicts.emoji)
             }
-            keyLog.info("한자[\(app, privacy: .public)]: 앱글자 [\(before ?? "(못 읽음)", privacy: .public)] 기록 [\(TypedText.text, privacy: .public)] 조합 [\(composing, privacy: .public)] 방식 \(String(describing: replace), privacy: .public) 후보 \(items.count)")
+            keyLog.info("한자[\(app, privacy: .public)]: 앱글자 \(before?.count ?? -1)자 기록 \(TypedText.text.count)자 조합 \(composing.count)자 방식 \(String(describing: replace), privacy: .public) 후보 \(items.count)")
         }
 
         guard !items.isEmpty else {
@@ -230,6 +230,6 @@ extension InputController {
         }
         if cursorBack > 0 { KeySender.arrowLeft(cursorBack) }
         TypedText.clear()
-        keyLog.info("한자 선택 \(e.key, privacy: .public) → \(e.text, privacy: .public)")
+        keyLog.info("한자 선택: 키 \(e.key.count)자 → 후보 \(e.text.count)자")
     }
 }

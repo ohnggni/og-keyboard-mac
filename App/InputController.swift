@@ -282,7 +282,7 @@ final class InputController: IMKInputController {
     private func asciiOf(_ event: NSEvent) -> Int? {
         // charactersIgnoringModifiers는 입력기 쪽에서 Shift까지 빼버림(Shift+1 → "1") → characters 사용.
         // Cmd/Ctrl/Option 조합은 이 함수 전에 걸러지므로 여기선 Shift·Caps Lock만 반영됨.
-        keyLog.debug("key code=\(event.keyCode, privacy: .public) chars=\(event.characters ?? "", privacy: .public) ign=\(event.charactersIgnoringModifiers ?? "", privacy: .public)")
+        keyLog.debug("key code=\(event.keyCode, privacy: .public) chars=\(event.characters?.count ?? 0)자")
         guard let s = event.characters, s.unicodeScalars.count == 1,
               var c = s.unicodeScalars.first?.value else { return nil }
         let shift = event.modifierFlags.contains(.shift)

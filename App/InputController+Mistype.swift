@@ -35,7 +35,7 @@ extension InputController {
             TypedText.clearTextOnly()   // 화면 글자가 바뀌었으니 기록은 더 못 믿음
             MistypeChain.at = nil
             switchMode(to: toKorean)
-            keyLog.info("바로잡기 선택 [\(t, privacy: .public)] → [\(out, privacy: .public)]")
+            keyLog.info("바로잡기 선택 \(t.count)자 → \(out.count)자")
             return
         }
 
@@ -112,7 +112,7 @@ extension InputController {
         MistypeChain.words += 1
         MistypeChain.toKorean = toKorean
         MistypeChain.at = now
-        keyLog.info("바로잡기[\(app, privacy: .public)] \(useClient ? "앱" : "키흉내", privacy: .public) [\(word, privacy: .public)] → [\(out, privacy: .public)] 기록 \(logs.count)개 연속 \(MistypeChain.words)")
+        keyLog.info("바로잡기[\(app, privacy: .public)] \(useClient ? "앱" : "키흉내", privacy: .public) \(word.count)자 → \(out.count)자 기록 \(logs.count)개 연속 \(MistypeChain.words)")
         if !chaining { switchMode(to: toKorean) }
         else { ModeIndicator.shared.show(hangul: toKorean) }
     }

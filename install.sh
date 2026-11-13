@@ -21,6 +21,10 @@ trap 'rm -rf "$TMP"' EXIT
 
 echo "▶ 1/3 내려받는 중…"
 curl -fL --progress-bar "$URL" -o "$TMP/OGKeyboard.zip"
+# 무결성 검사: 릴리스에 함께 올라온 sha256과 대조 (어긋나면 설치 중단)
+curl -fsSL "$URL.sha256" -o "$TMP/OGKeyboard.zip.sha256" || { echo "❌ 검사 파일(sha256)을 받지 못해 설치를 중단합니다."; exit 1; }
+(cd "$TMP" && shasum -a 256 -c OGKeyboard.zip.sha256 >/dev/null) || { echo "❌ 내려받은 파일이 릴리스 원본과 다릅니다 (sha256 불일치). 설치를 중단합니다."; exit 1; }
+echo "  무결성 검사 통과 (sha256)"
 ditto -x -k "$TMP/OGKeyboard.zip" "$TMP"
 [[ -d "$TMP/OGKeyboard.app" ]] || { echo "❌ 내려받은 파일에 OGKeyboard.app 이 없습니다."; exit 1; }
 

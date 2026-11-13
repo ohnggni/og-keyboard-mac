@@ -151,7 +151,7 @@ enum FieldWatcher {
             identifier: str(e, "AXIdentifier"),
             classList: str(e, "AXDOMClassList"))
         let english = FieldRules.isEnglish(f)
-        keyLog.debug("칸: \(String(describing: f), privacy: .public) → \(english ? "영문" : "그대로", privacy: .public)")
+        keyLog.debug("칸: role=\(f.role ?? "-", privacy: .public) sub=\(f.subrole ?? "-", privacy: .public) → \(english ? "영문" : "그대로", privacy: .public)")
         return english
     }
 

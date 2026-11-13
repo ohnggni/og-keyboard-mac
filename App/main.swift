@@ -42,9 +42,15 @@ ClipboardHistory.shared.start()
 Fallback.start()
 FieldWatcher.start()
 CommitGuard.start()
-// 클릭하면 커서가 옮겨졌을 수 있으니 글자 기록을 끊는다 (마우스 전역 감시는 권한 불필요)
+// 클릭하면 커서가 옮겨졌을 수 있으니 글자 기록을 끊고, 열려 있는 후보 세션도 닫는다.
+// 후보 세션은 열 때의 교체 범위를 들고 있어, 커서가 옮겨간 뒤 고르면 엉뚱한 글자를 바꾼다.
+// (후보 창 자체의 클릭은 우리 앱 안의 일이라 전역 감시에 안 걸린다 → 클릭 선택은 그대로 동작)
 NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { _ in
     TypedText.clearTextOnly()
+    if let c = InputController.active {
+        if c.hanja != nil { c.closeHanja() }
+        if c.emojiSession != nil { c.closeEmoji() }
+    }
 }
 NSLog("OGKeyboard 시작 (\(bundleID))")
 app.run()

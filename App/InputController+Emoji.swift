@@ -61,7 +61,7 @@ extension InputController {
         s.client.insertText(e, replacementRange: notFound)
         EmojiData.addRecent(e)
         TypedText.clearTextOnly()
-        keyLog.info("이모지 \(e, privacy: .public)")
+        keyLog.info("이모지 \(e.count)자 선택")
     }
 
     /// 이모지 창이 열려 있을 때의 키. 처리했으면 true.
