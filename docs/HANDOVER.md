@@ -53,6 +53,14 @@
 - [ ] O6. FieldWatcher 판정 큐 coalescing (무응답 앱에서 판정 지연)
 - [ ] B5. FieldWatcher `manualEnabled` pid 정리 (종료 시 제거)
 
+### 기능 추가
+
+- [ ] F1. 권한·설정 점검 창 (외부 사용자용) — **구현, 실기 확인 필요**. `App/PermissionCheck.swift`.
+  - 점검: 손쉬운 사용(`AXIsProcessTrusted`)·입력 모니터링(`IOHIDCheckAccess`)·입력 소스 켜짐(TIS `IsEnabled`)은 필수, 'Caps Lock으로 라틴 입력 소스 전환'(`com.apple.HIToolbox` `TISRomanSwitchState`, 못 읽으면 '직접 확인')은 권장. 창은 1초마다 다시 읽음.
+  - 각 항목 '설정 열기' → 해당 설정 화면 (권한 항목은 요청도 함께 보냄). '권한 초기화 후 다시 요청' = `tccutil reset Accessibility|ListenEvent <번들ID>` + 재요청 (O2가 풀리기 전까지 업데이트 후 권한 풀림의 사용자용 해결책). '입력기 다시 시작' = 조합 확정 후 `exit(0)`.
+  - 메뉴: 필수 권한이 빠지면 맨 위에 ⚠️ 줄(누르면 창), 항상 '권한 및 설정 점검…' 항목. 필수 권한이 빠진 채 새 빌드(CFBundleVersion)가 처음 뜨면 창 자동 1회.
+  - 실기로 확인할 것: ① tccutil reset이 관리자 권한 없이 되는지 ② `TISRomanSwitchState` 값이 실제 설정과 맞는지 ③ exit(0) 뒤 다음 키 입력 때 입력기가 다시 뜨는지.
+
 ### 2단계
 
 - [ ] O1. App을 SwiftPM 타깃으로 (증분 빌드 + HangulCore public API 정리)
@@ -93,3 +101,4 @@
 | 2026-11-14 | Claude | B12 크로스체크: Termix=Electron+xterm.js, 원인은 Chromium의 1자 삽입 경로 + xterm.js keydown.key 우선(A~Z만 예외)으로 재확정. 우회 구현 — Chromium 터미널에서 바뀐 기호를 조합 중 글자로 걸어둠 (`LiteralHold` + 테스트, `pendingLiteral`, `ChromiumApps`). **실기 확인 필요** (위 B12의 예측 ①② 포함) |
 | 2026-11-14 | 진석 + Claude | B12 실기 확인: Termix에서 390 Shift+쉼표·마침표가 2·3으로 정상 입력됨. 완료 처리 |
 | 2026-11-14 | Claude | v0.4.2 릴리스: Info.plist 0.4.2로 올리고 태그 `v0.4.2` 푸시 (빌드 확인은 진석이 맥에서) |
+| 2026-11-14 | Claude | F1 권한·설정 점검 창 구현 (메뉴 ⚠️ 줄, 설정 바로가기, 권한 초기화·입력기 다시 시작, 첫 실행 자동 안내), README·사용법·install.sh 안내 갱신. **실기 확인 필요** |

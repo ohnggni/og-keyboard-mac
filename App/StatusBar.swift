@@ -80,7 +80,7 @@ final class StatusBar: NSObject {
     // MARK: 메뉴
 
     private enum Tag {
-        static let remember = 1, terminal = 2, clipOn = 3, fallback = 4, appName = 5, autoEnglish = 6, header = 10, secure = 11, keepBase = 100
+        static let remember = 1, terminal = 2, clipOn = 3, fallback = 4, appName = 5, autoEnglish = 6, header = 10, secure = 11, permission = 12, keepBase = 100
     }
 
     private func makeMenu() -> NSMenu {
@@ -96,6 +96,9 @@ final class StatusBar: NSObject {
         secure.tag = Tag.secure
         secure.isHidden = true
         menu.addItem(secure)
+        let perm = item("", #selector(openPermissions), tag: Tag.permission)
+        perm.isHidden = true
+        menu.addItem(perm)
         menu.addItem(.separator())
 
         // 자판
@@ -142,6 +145,7 @@ final class StatusBar: NSObject {
         menu.addItem(item("영문·숫자 칸에서 자동 영문", #selector(toggleAutoEnglish), tag: Tag.autoEnglish, symbol: "key"))
         menu.addItem(.separator())
 
+        menu.addItem(item("권한 및 설정 점검…", #selector(openPermissions), symbol: "checkmark.shield"))
         menu.addItem(item("사용법…", #selector(openHelp), symbol: "book"))
         menu.addItem(item("OG키보드 정보…", #selector(openAbout), symbol: "info.circle"))
         return menu
@@ -223,6 +227,7 @@ final class StatusBar: NSObject {
                     .foregroundColor: NSColor.secondaryLabelColor,
                 ])
             case Tag.secure: fillSecure(mi)
+            case Tag.permission: fillPermission(mi)
             case Tag.autoEnglish: mi.state = FieldWatcher.enabled ? .on : .off
             case Tag.remember: mi.state = ModeState.rememberPerApp ? .on : .off
             case Tag.clipOn: mi.state = ClipboardHistory.shared.enabled ? .on : .off
@@ -262,6 +267,23 @@ final class StatusBar: NSObject {
         ]))
         mi.attributedTitle = s
     }
+
+    /// 꼭 필요한 권한이 빠져 있으면 경고 줄을 보여준다 (누르면 점검 창)
+    private func fillPermission(_ mi: NSMenuItem) {
+        let missing = Permissions.items.filter { $0.required && $0.state == .missing }.map(\.title)
+        guard !missing.isEmpty else { mi.isHidden = true; return }
+        mi.isHidden = false
+        mi.isEnabled = true
+        let s = NSMutableAttributedString(string: "⚠️  권한 필요 · " + missing.joined(separator: ", "), attributes: [
+            .font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: NSColor.systemRed,
+        ])
+        s.append(NSAttributedString(string: "\n      눌러서 점검 창을 여십시오", attributes: [
+            .font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.secondaryLabelColor,
+        ]))
+        mi.attributedTitle = s
+    }
+
+    @objc private func openPermissions() { PermissionWindow.shared.show() }
 
     @objc private func toggleRemember() { ModeState.rememberPerApp.toggle() }
     @objc private func clearRemember() { ModeState.clearAppModes() }
