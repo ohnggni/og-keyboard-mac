@@ -1,1 +1,83 @@
-IyDsnbjsiJjsnbjqs4Qg66y47IScIOKAlCBPR+2CpOuztOuTnCAob2cta2V5Ym9hcmQtbWFjKQoKPiDsnbQg66y47ISc64qUIOyCrOuejOqzvCBBSSDsnpHsl4XsnpAoQ2xhdWRlLCBNdXNlIOuTsSnqsIAg67KI6rCI7JWEIOyekeyXhe2VoCDrlYzsnZggKirsnKDsnbztlZwg6rO17JygIOq4sOuhnSoq7J2064ukLgo+IOyxhO2MhSDrp6Xrnb3snYAg7ISc66GcIOuEmOyWtOqwgOyngCDslYrsnLzrr4DroZwsIOyekeyXhSDsg4Htg5zripQg67CY65Oc7IucIOydtCDrrLjshJzsl5Ag64Ko6ri064ukLgo+IOyDgeyEuCDrtoTshJ0o67KE6re4IOq3vOqxsMK37LWc7KCB7ZmUKeydgCBbQU5BTFlTSVMtMjAyNi0xMS0xMi5tZF0oQU5BTFlTSVMtMjAyNi0xMS0xMi5tZCkg7LC46rOgLgoKIyMg7J6R7JeFIOq3nOy5mSAo66qo65OgIOyekeyXheyekCDqs7XthrUpCgoxLiAqKuyLnOyekSDsoIQqKjog7J20IOusuOyEnOyZgCDrtoTshJ0g66y47ISc66W8IOydveqzoCwgYGdpdCBwdWxsYOuhnCDstZzsi6Ag7IOB7YOc7JeQ7IScIOyLnOyeke2VnOuLpC4g64uk66W4IOyekeyXheyekOqwgCDsp4Ttlokg7KSR7J24IO2VreuqqeydgCDqsbTrk5zrpqzsp4Ag7JWK64qU64ukLgoyLiAqKuuylOychCoqOiDtlZwg67KI7JeQIO2VnCDtla3rqqkoQjEsIE8zIOuTsSnrp4wg7J6h64qU64ukLiDtla3rqqkg67KI7Zi466W8IOy7pOuwiyDrqZTsi5zsp4Dsl5Ag64Sj64qU64ukLiDsmIg6IGBCMTog7J6F66ClIOuCtOyaqSDroZzqt7jrpbwg6ri47J2066eMIOuCqOq4sOqyjCDsoJXrpqxgCjMuICoq64Gd64KY66m0Kio6IOyVhOuemCAi7ZiE7J6sIOyDge2DnCLsnZgg7LK07YGs67CV7Iqk7JmAICLsnpHsl4Ug66Gc6re4IuulvCDqsLHsi6DtlbQgKirqsJnsnYAg7Luk67CLKirsl5Ag7Y+s7ZWo7ZWc64ukLiDsg4Htg5wg7ZGc6riw6rCAIOy9lOuTnOuztOuLpCDsmKTrnpjrkJjrqbQg6re46rKMIOqzpyDrsoTqt7jri6QuCjQuICoqbWFpbiDtkbjsi5wgPSDruYzrk5wg7Iuk7ZaJKio6IG1haW7sl5Ag7ZG47Iuc7ZWY66m0IEdpdEh1YiBBY3Rpb25z6rCAIO2FjOyKpO2KuCvruYzrk5zrpbwg64+M66as6rOgIOqysOqzvOusvOydhCDslYTti7DtjKntirjroZwg7Jis66aw64ukICjrprTrpqzsiqTripQg7JWIIOunjOuTpikuIOq5qOynhCDsg4Htg5zroZwgbWFpbuyXkCDtkbjsi5ztlZjsp4Ag7JWK64qU64ukLiDsnpDsi6Ag7JeG7Jy866m0IOu4jOuenOy5mCArIFBS66GcLgo1LiAqKuumtOumrOyKpCoqOiDtg5zqt7ggYHZYLlkuWmDrpbwg7Jis66a0IOuVjOunjCDrprTrpqzsiqTqsIAg66eM65Ok7Ja07KeE64ukLiDtg5zqt7gg7KCE7JeQIGBBcHAvSW5mby5wbGlzdGDsnZggYENGQnVuZGxlU2hvcnRWZXJzaW9uU3RyaW5nYOydhCDtg5zqt7jsmYAg66ee7LaY64ukIChCOCwg7JWE7KeBIOyImOuPmSkuCjYuICoq6rKA7KadKio6IOunpeydtCDsl4bripQg7J6R7JeF7J6Q64qUIOuhnOy7rCDruYzrk5zqsIAg7JWIIOuQnOuLpCDigJQgcHVzaCDtm4QgQWN0aW9ucyDqsrDqs7zroZwg7ZmV7J247ZWc64ukLiDsi6TquLAo7Iuk7KCcIOunpSDsnoXroKUg64+Z7J6RKSDtmZXsnbjsnbQg7ZWE7JqU7ZWcIO2VreuqqeydgCAi7Iuk6riwIO2ZleyduCDtlYTsmpQi65286rOgIOuqheyLnO2VmOqzoCDsmYTro4wg7LKY66as7ZWY7KeAIOyViuuKlOuLpC4KCiMjIO2UhOuhnOygne2KuCDqsJzsmpQKCi0g7JWg7ZSMIOyLpOumrOy9mCDrp6Xsmqkg7ZWc6riAIOyeheugpeq4sCAoSW5wdXRNZXRob2RLaXQpLiBtYWNPUyAxMyssIFN3aWZ0LCDrhKTtirjsm4ztgawg6riw64qlIOyXhuydjC4KLSDsnpDtjJA6IOyEuOuyjOyLnSAzOTDCtzM5McK37Iic7JWE656YLCDrkZDrsozsi50uIOuqqOyVhOy5mOq4sCwg7ZWc7J6QwrfsnbTrqqjsp4AsIOuwlOuhnOyeoeq4sCwg7YWN7Iqk7Yq4IOuLqOy2leyWtCwg7YG066a967O065OcIOq4sOuhnSwg7JiB66y4wrfsiKvsnpAg7Lm4IOyekOuPmSDsmIHrrLguCi0g6rWs7KGwOiBgU291cmNlcy9IYW5ndWxDb3JlL2Ao66elIOydmOyhtOyEsSDsl4bripQg7L2U7Ja0LCBgc3dpZnQgdGVzdGAg64yA7IOBKSArIGBBcHAvYCjsnoXroKXquLAg67O47LK0KSArIGB0b29scy9gKOynhOuLqCDrj4TqtawpLgotIOu5jOuTnDog66el7JeQ7ISc64qUIGAuL2Rldi5zaGAgKO2FjOyKpO2KuOKGkuu5jOuTnOKGkuyEpOy5mOKGkuuTseuhnSksIOybkOqyqeydgCDslYTrnpgg7LC46rOgLiBgYnVpbGQuc2hg6rCAIENvcmUrQXBwIOyghOyytOulvCBgc3dpZnRjYCDtlZwg67KI7Jy866GcIO2VnCDrqqjrk4jsl5Ag66y27Ja0IOy7tO2MjOydvO2VnOuLpC4KCiMjIOybkOqyqSDruYzrk5wgKEdpdEh1YiBBY3Rpb25zLCBgLmdpdGh1Yi93b3JrZmxvd3MvcmVsZWFzZS55bWxgKQoKfCDtirjrpqzqsbAgfCDrj5nsnpEgfAp8LS0tfC0tLXwKfCDtg5zqt7ggYHYqYCBwdXNoIHwg7YWM7Iqk7Yq4IOKGkiDruYzrk5wg4oaSIOumtOumrOyKpCDsg53shLEgKyBPR0tleWJvYXJkLnppcCDqsozsi5wgfAp8IGBtYWluYCBwdXNoIHwg7YWM7Iqk7Yq4IOKGkiDruYzrk5wg4oaSIOyVhO2LsO2Mqe2KuCDsl4XroZzrk5zrp4wgKOumtOumrOyKpCDsl4bsnYwpIHwKfCDsiJjrj5kg7Iuk7ZaJICh3b3JrZmxvd19kaXNwYXRjaCkgfCDslYTti7DtjKntirgg7JeF66Gc65Oc66eMIHwKCi0g67mE7JqpOiAqKuqzteqwnCDsoIDsnqXshowgKyDtkZzspIAgYG1hY29zLTE1YCDrn6zrhIjrnbwg66y066OMKiogKOu2hOufiSDsg4HtlZwg7JeG7J2MKS4g7KCA7J6l7IaM66W8IOu5hOqzteqwnOuhnCDrsJTqvrjqsbDrgpggbGFyZ2VyIOufrOuEiOuhnCDrsJTqvrjrqbQgbWFjT1Mg67aE64u5IOqzvOq4iOydtCDrtpnsnLzri4gg7KO87J2YLgotIOyLpOy4oTogdjAuNC4wIOumtOumrOyKpCDruYzrk5wg7KCE7LK0IOyVvSA1Ney0iC4KLSDshJzrqoU6IENJ7JeQ64qUIOyduOymneyEnOqwgCDsl4bslrQg7J6E7IucKGFkLWhvYykg7ISc66qFIOKGkiDsl4XrjbDsnbTtirjrp4jri6QgbWFjT1Mg6raM7ZWcKOyGkOyJrOyatCDsgqzsmqnCt+yeheugpSDrqqjri4jthLDrp4Ep7J20IO2SgOumrOuKlCDqsoPsnbQg7JWM66Ck7KeEIOygnOyVvSAoTzLsl5DshJwg6rCc7ISgIOyYiOyglSkuCgojIyDtmITsnqwg7IOB7YOcICgyMDI2LTExLTEyIOq4sOykgCkKCi0g7LWc7IugIOumtOumrOyKpDogKip2MC40LjAqKi4g67aE7ISdIOq4sOykgCDsu6TrsIs6IGBkMDdmMmZhYC4KLSDrtoTshJ0g7JmE66OMICjrsoTqt7ggMTHqsbQsIOy1nOygge2ZlCA46rG0IOKAlCDrtoTshJ0g66y47IScKS4g7JWE656Y64qUIOyghOu2gCAqKuuvuOyImOyglSoqIOyDge2DnOyXkOyEnCDsi5zsnpHtlZzri6QuCgojIyMgMOuLqOqzhCDigJQg67CU66GcIO2VoCDqsoMKCi0gWyBdIEIxLiDsnoXroKUg6riA7J6Q6rCAIGBwcml2YWN5OiAucHVibGljYCBpbmZvIOuhnOq3uOyXkCDtj4nrrLjsnLzroZwg64Ko7J2MICjqsJzsnbjsoJXrs7QpIOKAlCBgQXBwL0lucHV0Q29udHJvbGxlcitIYW5qYS5zd2lmdDo4OWAg65OxCi0gWyBdIEIzLiBgaW5zdGFsbC5zaGDqsIAg66a066as7Iqk7J2YIHNoYTI1NuydhCDqsoDspp3tlZjsp4Ag7JWK7J2MCi0gWyBdIEIyLiDtlZzsnpDCt+2BtOumveuztOuTnCDtm4Trs7Qg7LC97J20IOyXtOumsCDrkqQg7YG066at7Jy866GcIOy7pOyEnOqwgCDsmK7qsqjqsIDrj4Qg7IS47IWY7J20IOycoOyngOuQqCAo7JeJ65qx7ZWcIOuylOychCDqtZDssrQg6rCA64qlKQotIFt4XSBPMy4gcHVzaCDsi5wgQ0kg4oCUIGByZWxlYXNlLnltbGDsl5AgYGJyYW5jaGVzOiBbIm1haW4iXWAg7LaU6rCAIOyZhOujjCAoMjAyNi0xMS0xMiwg7KeE7ISd7J20IOybueyXkOyEnCDsp4HsoJEg7Y647KeROiDsm4ztgaztlIzroZwg7YyM7J287J2AIEdpdEh1YiBBcHDsl5Ag7JuM7YGs7ZSM66GcIOq2jO2VnOydtCDsl4bslrQgQUkg7J6R7JeF7J6Q6rCAIOuquyDqs6DsuagpLiDssqsg7J6Q64+ZIOu5jOuTnCBydW4gNDMzNjQ3MjMwMjkg7ISx6rO1OiDthYzsiqTtirgg7Ya16rO8LCDslYTti7DtjKntirggT0dLZXlib2FyZCAyLjhNQiDqsozsi5wsIOumtOumrOyKpCDri6jqs4TripQg7KCV7IOB7KCB7Jy866GcIOqxtOuEiOucgAoKIyMjIDHri6jqs4QKCi0gWyBdIE8yLiDrprTrpqzsiqQg7ISc66qFIOydvOq0gOyEsSAo7J6Q7LK0IOyEnOuqhSDsnbjspp3shJzrpbwgQ0kg7Iuc7YGs66a/7Jy866GcIOKGkiDqtoztlZwg7Jyg7KeAKQotIFsgXSBCOC4g7YOc6re47JeQ7IScIOyVsSDrsoTsoIQg66y47J6Q7Je0IOyekOuPmSDso7zsnoUKLSBbIF0gTzYuIEZpZWxkV2F0Y2hlciDtjJDsoJUg7YGQIGNvYWxlc2NpbmcgKOustOydkeuLtSDslbHsl5DshJwg7YyQ7KCVIOyngOyXsCkKLSBbIF0gQjUuIEZpZWxkV2F0Y2hlciBgbWFudWFsRW5hYmxlZGAgcGlkIOygleumrCAo7KKF66OMIOyLnCDsoJzqsbApCgojIyMgMuuLqOqzhAoKLSBbIF0gTzEuIEFwcOydhCBTd2lmdFBNIO2DgOq5g+ycvOuhnCAo7Kad67aEIOu5jOuTnCArIEhhbmd1bENvcmUgcHVibGljIEFQSSDsoJXrpqwpCi0gWyBdIE84LiDsg4Htg5zquLDqs4QoTW9kZVN0YXRlwrdGaWVsZFdhdGNoZXIg7KCE7J20wrdNaXN0eXBlQ2hhaW4p66W8IO2FjOyKpO2KuCDqsIDriqXtlZwg6rWs7KGw7LK066GcCi0gWyBdIEI5LiDsiJzslYTrnpgg7J6Q7YyQIO2DgOydtO2VkSDthYzsiqTtirgg67O06rCVLCBgaW5wdXRTZXF1ZW50aWFsYCjrqqjslYTsuZjquLAg64GIIOqyveuhnCkg64W47LacL+ygnOqxsCDqsrDsoJUKLSBbIF0gTzQuIEhhbmphRGljdOydmCBgW1VJbnQ4XShkYXRhKWAg67O17IKsIOygnOqxsCAobW1hcCDrrLTtmqjtmZQpIOKAlCDtlITroZztjIzsnbwg7ZuECi0gWyBdIE81LiDsnbTrqqjsp4DCt+2bhOuztCDssL0g7YKkIOyeheugpeuniOuLpCDsoITssrQg7J6s7IOd7ISxIOKGkiDshYAg7J6s7IKs7JqpCgojIyMg64KY66i47KeAIOuyhOq3uCAo67aE7ISdIOusuOyEnOyXkCDsg4HshLgpCgotIFsgXSBCNC4g64uo7LaV7Ja0IGB77Iuc6rCEKzF9YOydtCDtlZjro6jrpbwg642U7ZWoICjsgqzsi6Tsg4Eg66y064+Z7J6RKQotIFsgXSBCNi4g7YG066a967O065OcIOunjOujjCDtla3rqqnsnbQg7KCA7J6l7IaM7JeQIOuCqOyVhCDrs7TqtIAg6riw6rCE7J2EIOuQmOuPjOumrOuptCDrkJjsgrTslYTrgqgKLSBbIF0gQjcuIE1pc3R5cGVDaGFpbiDsoITsl60g7IOB7YOc6rCAIOyVsSDsoITtmZjsl5Drj4Qg7Jyg7KeA65CoCi0gWyBdIEIxMC4gRmllbGRSdWxlcyDsmKTtg5Ag7Jes7KeAICjsoJzsmbjslrQg6rKA7IKsIOuylOychCB2cyBkb21JZGVudGlmaWVyIO2GoO2BsCkKLSBbIF0gQjExLiBgTlNTY3JlZW4uc2NyZWVuc1swXWAg6rCV7KCcIOygkeq3vCAoQ2FuZGlkYXRlUGFuZWzCt0Vtb2ppUGFuZWwpCgojIyDqsoDspp3rkJwg7IKs7IukIC8g6rKw7KCVIOyCrO2VrQoKLSBoYW5qYS5kYXTCt2Vtb2ppLmRhdDog7YKkIOuwlOydtO2KuCDsiJwg7KCV66CsICsg7KSR67O1IOyXhuydjCAo7KCE7IiYIOqygOyCrCkuIEhhbmphRGljdCDsnbTsp4Qg7YOQ7IOJ7J2AIOustOyekeychCAyMDDqsJwg7YKkIOuMgOyhsCDthrXqs7wuCi0g64Sk7Yq47JuM7YGsIOy9lOuTnCDsl4bsnYwg4oCUIFJFQURNReydmCAi7Jm467aAIOyghOyGoSDsl4bsnYwi6rO8IOydvOy5mC4g64uoLCBCMeydmCDroZzqt7gg6riw66Gd7J2AIOyYiOyZuOuhnCDst6jquIntlbQg6rOg7Lmc64ukLgotIG9hc2lzLXJlYWRlcuyZgCDri6zrpqwg7J20IOyggOyepeyGjOuKlCDqt5zrqqjqsIAg7J6R7JWEKDQsMDY17KSEKSDrqqjrk4gg7KCV66as66W8IOuvuOujsCDsnbTsnKDqsIAg7JeG64ukIOKAlCDri6gsIDDCtzHri6jqs4Trpbwg66i87KCAIOuBneuCuCDrkqQgMuuLqOqzhOuhnC4KCiMjIOyekeyXhSDroZzqt7gKCnwg64Kg7KecIHwg7J6R7JeF7J6QIHwg64K07JqpIHwKfC0tLXwtLS18LS0tfAp8IDIwMjYtMTEtMTIgfCBNdXNlIHwg7KCE7LK0IOu2hOyEnSAo67KE6re4IDEx6rG0wrfstZzsoIHtmZQgOOqxtCwgYGRvY3MvQU5BTFlTSVMtMjAyNi0xMS0xMi5tZGApLCDsnbQg7J247IiY7J246rOEIOusuOyEnOyZgCBDTEFVREUubWQvQUdFTlRTLm1kIO2PrOyduO2EsOulvCBHaXRIdWLsl5Ag6rKM7IucLiDsm4ztgaztlIzroZwg7Yq466as6rGwIOy2lOqwgOuKlCDsm4ztgaztlIzroZwg7YyM7J28IOq2jO2VnCDrrLjsoJzroZwg7IiY64+ZIO2OuOynkSDrjIDquLDroZwg7KCV7KCVIHwKfCAyMDI2LTExLTEyIHwg7KeE7ISdICsgTXVzZSB8IOynhOyEneydtCBgcmVsZWFzZS55bWxg7JeQIG1haW4gcHVzaCDtirjrpqzqsbDrpbwg7KeB7KCRIOy2lOqwgCg5MDIwODAzKSDihpIg7LKrIOyekOuPmSDsm5Dqsqkg67mM65OcIOyEseqztSAocnVuIDQzMzY0NzIzMDI5LCDthYzsiqTtirjCt+u5jOuTnMK37JWE7Yuw7Yyp7Yq4IO2ZleyduCkuIE8zIOyZhOujjCB8Cg==
+# 인수인계 문서 — OG키보드 (og-keyboard-mac)
+
+> 이 문서는 사람과 AI 작업자(Claude, Muse 등)가 번갈아 작업할 때의 **유일한 공유 기록**이다.
+> 채팅 맥락은 서로 넘어가지 않으므로, 작업 상태는 반드시 이 문서에 남긴다.
+> 상세 분석(버그 근거·최적화)은 [ANALYSIS-2026-11-12.md](ANALYSIS-2026-11-12.md) 참고.
+
+## 작업 규칙 (모든 작업자 공통)
+
+1. **시작 전**: 이 문서와 분석 문서를 읽고, `git pull`로 최신 상태에서 시작한다. 다른 작업자가 진행 중인 항목은 건드리지 않는다.
+2. **범위**: 한 번에 한 항목(B1, O3 등)만 잡는다. 항목 번호를 커밋 메시지에 넣는다. 예: `B1: 입력 내용 로그를 길이만 남기게 정리`
+3. **끝나면**: 아래 "현재 상태"의 체크박스와 "작업 로그"를 갱신해 **같은 커밋**에 포함한다. 상태 표기가 코드보다 오래되면 그게 곧 버그다.
+4. **main 푸시 = 빌드 실행**: main에 푸시하면 GitHub Actions가 테스트+빌드를 돌리고 결과물을 아티팩트로 올린다 (릴리스는 안 만듦). 깨진 상태로 main에 푸시하지 않는다. 자신 없으면 브랜치 + PR로.
+5. **릴리스**: 태그 `vX.Y.Z`를 올릴 때만 릴리스가 만들어진다. 태그 전에 `App/Info.plist`의 `CFBundleShortVersionString`을 태그와 맞춘다 (B8, 아직 수동).
+6. **검증**: 맥이 없는 작업자는 로컬 빌드가 안 된다 — push 후 Actions 결과로 확인한다. 실기(실제 맥 입력 동작) 확인이 필요한 항목은 "실기 확인 필요"라고 명시하고 완료 처리하지 않는다.
+
+## 프로젝트 개요
+
+- 애플 실리콘 맥용 한글 입력기 (InputMethodKit). macOS 13+, Swift, 네트워크 기능 없음.
+- 자판: 세벌식 390·391·순아래, 두벌식. 모아치기, 한자·이모지, 바로잡기, 텍스트 단축어, 클립보드 기록, 영문·숫자 칸 자동 영문.
+- 구조: `Sources/HangulCore/`(맥 의존성 없는 코어, `swift test` 대상) + `App/`(입력기 본체) + `tools/`(진단 도구).
+- 빌드: 맥에서는 `./dev.sh` (테스트→빌드→설치→등록), 원격은 아래 참고. `build.sh`가 Core+App 전체를 `swiftc` 한 번으로 한 모듈에 묶어 컴파일한다.
+
+## 원격 빌드 (GitHub Actions, `.github/workflows/release.yml`)
+
+| 트리거 | 동작 |
+|---|---|
+| 태그 `v*` push | 테스트 → 빌드 → 릴리스 생성 + OGKeyboard.zip 게시 |
+| `main` push | 테스트 → 빌드 → 아티팩트 업로드만 (릴리스 없음) |
+| 수동 실행 (workflow_dispatch) | 아티팩트 업로드만 |
+
+- 비용: **공개 저장소 + 표준 `macos-15` 러너라 무료** (분량 상한 없음). 저장소를 비공개로 바꾸거나 larger 러너로 바꾸면 macOS 분당 과금이 붙으니 주의.
+- 실측: v0.4.0 릴리스 빌드 전체 약 55초.
+- 서명: CI에는 인증서가 없어 임시(ad-hoc) 서명 → 업데이트마다 macOS 권한(손쉬운 사용·입력 모니터링)이 풀리는 것이 알려진 제약 (O2에서 개선 예정).
+
+## 현재 상태 (2026-11-12 기준)
+
+- 최신 릴리스: **v0.4.0**. 분석 기준 커밋: `d07f2fa`.
+- **v0.4.1 준비 완료**: B1·B2·B3 수정이 main `6858967`에 들어가고 CI 빌드 성공 (run 43370785804). 남은 건 태그 `v0.4.1` 게시뿐 — 태그 생성은 AI 작업자 도구로 못 해서 진석이 직접 올린다. 태그를 올리면 릴리스가 자동 생성된다.
+- 분석 완료 (버그 11건, 최적화 8건 — 분석 문서). 아래는 전부 **미수정** 상태에서 시작한다.
+
+### 0단계 — 바로 할 것
+
+- [x] B1. 입력 글자가 `privacy: .public` info 로그에 평문으로 남음 (개인정보) — 내용 대신 글자수만 기록하게 정리 (v0.4.1, `6858967`)
+- [x] B3. `install.sh`가 릴리스의 sha256을 검증하지 않음 — sha256 대조 후 설치, 불일치 시 중단. v0.4.0 실제 파일로 검증 통과 확인 (v0.4.1)
+- [x] B2. 한자·클립보드 후보 창이 열린 뒤 클릭으로 커서가 옮겨가도 세션이 유지됨 — 전역 클릭 감시에서 후보·이모지 세션을 닫게 함. 후보 창 자체의 클릭 선택은 영향 없음 (v0.4.1). 실기 확인은 릴리스 후 진석 확인 필요
+- [x] O3. push 시 CI — `release.yml`에 `branches: ["main"]` 추가 완료 (2026-11-12, 진석이 웹에서 직접 편집: 워크플로 파일은 GitHub App에 워크플로 권한이 없어 AI 작업자가 못 고침). 첫 자동 빌드 run 43364723029 성공: 테스트 통과, 아티팩트 OGKeyboard 2.8MB 게시, 릴리스 단계는 정상적으로 건너뜀
+
+### 1단계
+
+- [ ] O2. 릴리스 서명 일관성 (자체 서명 인증서를 CI 시크릿으로 → 권한 유지)
+- [ ] B8. 태그에서 앱 버전 문자열 자동 주입
+- [ ] O6. FieldWatcher 판정 큐 coalescing (무응답 앱에서 판정 지연)
+- [ ] B5. FieldWatcher `manualEnabled` pid 정리 (종료 시 제거)
+
+### 2단계
+
+- [ ] O1. App을 SwiftPM 타깃으로 (증분 빌드 + HangulCore public API 정리)
+- [ ] O8. 상태기계(ModeState·FieldWatcher 전이·MistypeChain)를 테스트 가능한 구조체로
+- [ ] B9. 순아래 자판 타이핑 테스트 보강, `inputSequential`(모아치기 끈 경로) 노출/제거 결정
+- [ ] O4. HanjaDict의 `[UInt8](data)` 복사 제거 (mmap 무효화) — 프로파일 후
+- [ ] O5. 이모지·후보 창 키 입력마다 전체 재생성 → 셀 재사용
+
+### 나머지 버그 (분석 문서에 상세)
+
+- [ ] B4. 단축어 `{시간+1}`이 하루를 더함 (사실상 무동작)
+- [ ] B6. 클립보드 만료 항목이 저장소에 남아 보관 기간을 되돌리면 되살아남
+- [ ] B7. MistypeChain 전역 상태가 앱 전환에도 유지됨
+- [ ] B10. FieldRules 오탐 여지 (제외어 검사 범위 vs domIdentifier 토큰)
+- [ ] B11. `NSScreen.screens[0]` 강제 접근 (CandidatePanel·EmojiPanel)
+
+## 검증된 사실 / 결정 사항
+
+- hanja.dat·emoji.dat: 키 바이트 순 정렬 + 중복 없음 (전수 검사). HanjaDict 이진 탐색은 무작위 200개 키 대조 통과.
+- 네트워크 코드 없음 — README의 "외부 전송 없음"과 일치. 단, B1의 로그 기록은 예외로 취급해 고친다.
+- oasis-reader와 달리 이 저장소는 규모가 작아(4,065줄) 모듈 정리를 미룰 이유가 없다 — 단, 0·1단계를 먼저 끝낸 뒤 2단계로.
+
+## 작업 로그
+
+| 날짜 | 작업자 | 내용 |
+|---|---|---|
+| 2026-11-12 | Muse | 전체 분석 (버그 11건·최적화 8건, `docs/ANALYSIS-2026-11-12.md`), 이 인수인계 문서와 CLAUDE.md/AGENTS.md 포인터를 GitHub에 게시. 워크플로 트리거 추가는 워크플로 파일 권한 문제로 수동 편집 대기로 정정 |
+| 2026-11-12 | 진석 + Muse | 진석이 `release.yml`에 main push 트리거를 직접 추가(9020803) → 첫 자동 원격 빌드 성공 (run 43364723029, 테스트·빌드·아티팩트 확인). O3 완료 |
+| 2026-11-12 | Muse | v0.4.1 일괄 수정 (B1·B2·B3, `6858967`) 푸시 → CI 빌드 성공 (run 43370785804). 이 문서가 base64 문자열로 잘못 저장돼 있던 것을 정상 텍스트로 복구 |
