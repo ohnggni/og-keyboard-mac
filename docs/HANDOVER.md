@@ -68,7 +68,7 @@
 - [ ] B7. MistypeChain 전역 상태가 앱 전환에도 유지됨
 - [ ] B10. FieldRules 오탐 여지 (제외어 검사 범위 vs domIdentifier 토큰)
 - [ ] B11. `NSScreen.screens[0]` 강제 접근 (CandidatePanel·EmojiPanel)
-- [ ] B12. Termix에서 일부 기호 키가 원래 글자로 입력됨 (390의 Shift+쉼표·마침표 → `<` `>`) — **원인 재확정·우회 구현 (2026-11-14, 실기 확인 필요)**.
+- [x] B12. Termix에서 일부 기호 키가 원래 글자로 입력됨 (390의 Shift+쉼표·마침표 → `<` `>`) — **원인 재확정·우회 구현·실기 확인 완료 (2026-11-14)**.
   - 원인: Termix는 네이티브가 아니라 **Electron + xterm.js**. 입력기가 조합 글자 없이 1자만 넣으면 Chromium(`render_widget_host_view_cocoa.mm` keyEvent)이 원래 키 정보(key=`<`)로 keydown을 보내고 넣은 글자(`2`)는 keypress로 보낸다. xterm.js `_keyDown`은 한 글자 키를 `ev.key`로 바로 셸에 보내고 keypress를 버린다. 단 key가 A~Z 대문자면 keypress로 미루는 HACK이 있어서 Shift+M(→1)·J(→4)는 정상이었던 것 (11-13 진단의 "Shift 키만 깨짐" 구분은 틀림 — M·J도 Shift 키).
   - 예측(실기로 확인할 것): ① 한글 조합 중(밑줄) 바로 뒤의 Shift+쉼표는 정상 (조합 글자가 있으면 Chromium이 keydown을 229로 보냄) ② 391 자판은 Shift 없는 `-` `[` `]` `\` `` ` `` 등 기호 키 21개도 같은 증상.
   - 우회: 터미널로 다루는 Chromium·Electron 앱(`Terminals` + `ChromiumApps`)에서, 자판이 기호 키를 다른 글자로 바꾸면(`LiteralHold.needsHold`) 그 글자를 바로 넣지 않고 **조합 중 글자로 걸어둔 뒤** 다음 키·확정 때 넣는다 → keydown이 229로 가서 xterm.js가 조합 경로로 받음. 걸어둔 글자는 다음 키까지 밑줄로 보이고, Backspace는 그 글자만 지운다. `commit`·`CommitGuard`는 `hasComposition`으로 걸어둔 글자까지 확정.
@@ -91,3 +91,4 @@
 | 2026-11-13 | Muse | B12 진단 시작: InputController에 DIAG 임시 로그 추가 (asciiOf 원본 문자·변환 결과·모드 기록). 진단 끝나면 제거할 것 |
 | 2026-11-13 | Muse | B12 진단 종료: 입력기 변환 정상·원인은 Termix 쪽으로 확정 (위 B12 항목 참고). DIAG 임시 로그 제거 |
 | 2026-11-14 | Claude | B12 크로스체크: Termix=Electron+xterm.js, 원인은 Chromium의 1자 삽입 경로 + xterm.js keydown.key 우선(A~Z만 예외)으로 재확정. 우회 구현 — Chromium 터미널에서 바뀐 기호를 조합 중 글자로 걸어둠 (`LiteralHold` + 테스트, `pendingLiteral`, `ChromiumApps`). **실기 확인 필요** (위 B12의 예측 ①② 포함) |
+| 2026-11-14 | 진석 + Claude | B12 실기 확인: Termix에서 390 Shift+쉼표·마침표가 2·3으로 정상 입력됨. 완료 처리 |
