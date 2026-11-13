@@ -196,10 +196,6 @@ final class InputController: IMKInputController {
         engine.dubeol = ModeState.layout.dubeol
         KeyLog.key(Character(UnicodeScalar(UInt32(ascii))!))
         let v = ModeState.layout.map(ascii)
-        if event.modifierFlags.contains(.shift) {
-            // DIAG (B12 임시): 변환 결과와 모드를 눈으로 확인 — 진단 끝나면 제거
-            keyLog.info("DIAG handle v=\(v, privacy: .public) jamo=\(HangulEngine.isJamo(v), privacy: .public) hangul=\(ModeState.hangul, privacy: .public)")
-        }
         if HangulEngine.isJamo(v) {
             let committed = engine.input(v)
             if !committed.isEmpty { insert(committed, sender) }
@@ -288,16 +284,10 @@ final class InputController: IMKInputController {
         // Cmd/Ctrl/Option 조합은 이 함수 전에 걸러지므로 여기선 Shift·Caps Lock만 반영됨.
         keyLog.debug("key code=\(event.keyCode, privacy: .public) chars=\(event.characters?.count ?? 0)자")
         guard let s = event.characters, s.unicodeScalars.count == 1,
-              var c = s.unicodeScalars.first?.value else {
-            // DIAG (B12 임시): 어떤 앱에서 어떤 형태로 오길래 변환이 빗나가는지 확인용 — 진단 끝나면 제거
-            keyLog.info("DIAG asciiOf 실패 code=\(event.keyCode, privacy: .public) chars=\(event.characters?.count ?? -1, privacy: .public) scalars=\(event.characters?.unicodeScalars.count ?? -1, privacy: .public)")
-            return nil
-        }
+              var c = s.unicodeScalars.first?.value else { return nil }
         let shift = event.modifierFlags.contains(.shift)
-        let raw = c
         if c >= 0x41 && c <= 0x5a && !shift { c += 0x20 }       // Caps Lock 대문자 → 소문자
         else if c >= 0x61 && c <= 0x7a && shift { c -= 0x20 }
-        if shift { keyLog.info("DIAG asciiOf code=\(event.keyCode, privacy: .public) raw=\(raw, privacy: .public) final=\(c, privacy: .public)") }
         guard c >= 0x21 && c <= 0x7e else { return nil }
         return Int(c)
     }
