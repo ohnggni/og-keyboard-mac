@@ -97,17 +97,6 @@ enum KeySender {
         }
     }
 
-    /// 아무 일도 안 하는 Shift 눌렀다 떼기 (B13: Chromium 터미널이 밑줄이 사라진 뒤 첫 키를 버리므로 대신 이걸 버리게 함)
-    static func nudge() {
-        let src = CGEventSource(stateID: .combinedSessionState)
-        for down in [true, false] {
-            let e = CGEvent(keyboardEventSource: src, virtualKey: 56, keyDown: down)
-            e?.type = .flagsChanged
-            e?.flags = down ? .maskShift : []
-            post(e)
-        }
-    }
-
     /// 커서를 왼쪽으로 n칸 (단축어 {커서})
     static func arrowLeft(_ n: Int) {
         guard trusted else { return }

@@ -81,7 +81,9 @@
   - 1차 수정(확정 뒤 0.08초 지연)은 실기에서 효과 없음 → 시간 문제가 아님.
   - 2차 수정: 키흉내 경로에서는 조합 글자를 확정하지 않고 `setMarkedText("")`로 밑줄째 지운 뒤 기록(TypedText)에만 붙이고, Backspace는 확정된 글자 수만큼만 보냄. 로그에 `(조합 N)` 표시. → 실기: 보낸 Backspace 1개도 버려짐 (Termix는 밑줄이 사라진 직후 첫 키를 버림).
   - 실기 확인: 왼쪽 ⌘로 먼저 확정하고 1~2초 뒤 바로잡기하면 정상 (사이에 키 하나 + 시간).
-  - 3차 수정: Chromium 터미널에서 조합 글자를 지운 경우 버려도 되는 Shift(`KeySender.nudge`)를 먼저 보내고 0.15초 뒤 Backspace·글자. iTerm2 등은 그대로.
+  - 3차 수정(더미 Shift + 0.15초 대기)도 효과 없음.
+  - **진짜 원인 (실기 `stty -icanon -echo; cat -v`)**: 셸이 받은 바이트 = `멱` `ㅓ` `^?` `exit`. Backspace는 버려지지 않았고, **입력기가 밑줄을 지워도(setMarkedText "") Termix(xterm.js)가 조합 글자를 셸에 보냄**. 1차(확정) 방식은 입력기 확정 + xterm.js 전송으로 `ㅓ`가 두 번 들어가 Backspace 2개가 모자랐던 것으로 보임.
+  - 4차 수정: 밑줄째 지우는 방식 유지, Chromium 터미널에선 밑줄 글자도 셸에 들어간 것으로 보고 Backspace 개수에 포함. 더미 Shift·대기 제거.
 - [x] B12. Termix에서 일부 기호 키가 원래 글자로 입력됨 (390의 Shift+쉼표·마침표 → `<` `>`) — **원인 재확정·우회 구현·실기 확인 완료 (2026-11-14)**.
   - 원인: Termix는 네이티브가 아니라 **Electron + xterm.js**. 입력기가 조합 글자 없이 1자만 넣으면 Chromium(`render_widget_host_view_cocoa.mm` keyEvent)이 원래 키 정보(key=`<`)로 keydown을 보내고 넣은 글자(`2`)는 keypress로 보낸다. xterm.js `_keyDown`은 한 글자 키를 `ev.key`로 바로 셸에 보내고 keypress를 버린다. 단 key가 A~Z 대문자면 keypress로 미루는 HACK이 있어서 Shift+M(→1)·J(→4)는 정상이었던 것 (11-13 진단의 "Shift 키만 깨짐" 구분은 틀림 — M·J도 Shift 키).
   - 예측(실기로 확인할 것): ① 한글 조합 중(밑줄) 바로 뒤의 Shift+쉼표는 정상 (조합 글자가 있으면 Chromium이 keydown을 229로 보냄) ② 391 자판은 Shift 없는 `-` `[` `]` `\` `` ` `` 등 기호 키 21개도 같은 증상.
@@ -110,4 +112,5 @@
 | 2026-11-14 | Claude | F1 권한·설정 점검 창 구현 (메뉴 ⚠️ 줄, 설정 바로가기, 권한 초기화·입력기 다시 시작, 첫 실행 자동 안내), README·사용법·install.sh 안내 갱신. **실기 확인 필요** |
 | 2026-11-14 | 진석 + Claude | B13 진단(조합 중 바로잡기 시 Termix가 첫 Backspace를 놓침) 및 1차 수정(확정 뒤 0.08초 지연) → 실기에서 효과 없음 |
 | 2026-11-14 | 진석 + Claude | B13 2차 수정(조합 글자 확정 않고 지움) → iTerm2 정상, Termix 여전. 확정 후 키+대기 시 정상 확인 |
-| 2026-11-14 | Claude | B13 3차 수정: Chromium 터미널에 Shift 더미 키 + 0.15초 대기. **실기 확인 필요** |
+| 2026-11-14 | 진석 + Claude | B13 3차 수정(더미 Shift + 대기) 효과 없음 → `cat -v`로 셸 수신 바이트 확인, 원인 재확정 (Termix가 지운 밑줄 글자를 보냄) |
+| 2026-11-14 | Claude | B13 4차 수정: Chromium 터미널에선 밑줄 글자까지 Backspace. **실기 확인 필요** |
