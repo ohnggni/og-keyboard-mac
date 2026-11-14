@@ -101,9 +101,17 @@ extension InputController {
             let cursor = a + (composing as NSString).length
             let n = (oldRegion as NSString).length
             client.insertText(newRegion, replacementRange: NSRange(location: max(0, cursor - n), length: n))
-        } else {
+        } else if composing.isEmpty {
             KeySender.backspaces(oldRegion.count)
             KeySender.type(newRegion)
+        } else {
+            // B13: 방금 확정한 조합 글자를 Chromium 터미널(Termix 등)은 비동기로 받는다.
+            // 바로 지우기 키를 보내면 첫 Backspace가 확정보다 먼저 도착해 버려지므로 잠깐 기다린다.
+            let n = oldRegion.count
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                KeySender.backspaces(n)
+                KeySender.type(newRegion)
+            }
         }
         TypedText.replaceSuffix(count: oldRegion.count, with: newRegion)
         KeyLog.clear()
