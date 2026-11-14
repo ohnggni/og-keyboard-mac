@@ -54,16 +54,31 @@ extension InputController {
         // 터미널류가 아니고 읽혔으면 앱 글자를 믿는다 (입력기 기록은 낡을 수 있음)
         let useClient = read != nil
 
-        commit(sender)   // 조합 글자 확정 (기록에도 들어감)
-
-        let full: String
-        if useClient, let r = read { full = r + composing }
-        else if KeySender.trusted { full = TypedText.text }
-        else {
+        if !useClient && !KeySender.trusted {
+            commit(sender)
             KeySender.requestTrust()
             ModeIndicator.shared.showMark("⇄")
             return
         }
+
+        // 키흉내(터미널) 경로: 조합 글자는 확정하지 않고 밑줄째 지운다 (B13).
+        // Chromium 터미널(Termix)은 확정 직후 오는 첫 Backspace를 버려서 앞 글자가 남았다.
+        // 화면(셸)에는 아직 안 들어간 글자이므로 기록에만 붙이고, Backspace는 확정된 글자 수만큼만 보낸다.
+        var held = 0
+        if !useClient, hasComposition {
+            let t = engine.flush() + pendingLiteral
+            pendingLiteral = ""
+            textClient(sender)?.setMarkedText("", selectionRange: NSRange(location: 0, length: 0),
+                                              replacementRange: NSRange(location: NSNotFound, length: NSNotFound))
+            TypedText.append(t)
+            held = t.count
+        } else {
+            commit(sender)   // 조합 글자 확정 (기록에도 들어감)
+        }
+
+        let full: String
+        if useClient, let r = read { full = r + composing }
+        else { full = TypedText.text }
 
         // 연속 실행인지: 2초 안이고, 지난번에 바꾼 글자가 그대로 커서 앞에 있을 때
         let now = Date()
@@ -101,17 +116,9 @@ extension InputController {
             let cursor = a + (composing as NSString).length
             let n = (oldRegion as NSString).length
             client.insertText(newRegion, replacementRange: NSRange(location: max(0, cursor - n), length: n))
-        } else if composing.isEmpty {
-            KeySender.backspaces(oldRegion.count)
-            KeySender.type(newRegion)
         } else {
-            // B13: 방금 확정한 조합 글자를 Chromium 터미널(Termix 등)은 비동기로 받는다.
-            // 바로 지우기 키를 보내면 첫 Backspace가 확정보다 먼저 도착해 버려지므로 잠깐 기다린다.
-            let n = oldRegion.count
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
-                KeySender.backspaces(n)
-                KeySender.type(newRegion)
-            }
+            KeySender.backspaces(max(0, oldRegion.count - held))
+            KeySender.type(newRegion)
         }
         TypedText.replaceSuffix(count: oldRegion.count, with: newRegion)
         KeyLog.clear()
@@ -120,7 +127,7 @@ extension InputController {
         MistypeChain.words += 1
         MistypeChain.toKorean = toKorean
         MistypeChain.at = now
-        keyLog.info("바로잡기[\(app, privacy: .public)] \(useClient ? "앱" : "키흉내", privacy: .public) \(word.count)자 → \(out.count)자 기록 \(logs.count)개 연속 \(MistypeChain.words)")
+        keyLog.info("바로잡기[\(app, privacy: .public)] \(useClient ? "앱" : "키흉내", privacy: .public) \(word.count)자(조합 \(held)) → \(out.count)자 기록 \(logs.count)개 연속 \(MistypeChain.words)")
         if !chaining { switchMode(to: toKorean) }
         else { ModeIndicator.shared.show(hangul: toKorean) }
     }
