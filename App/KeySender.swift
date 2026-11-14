@@ -113,23 +113,29 @@ enum KeySender {
     static func type(_ s: String) {
         let src = CGEventSource(stateID: .combinedSessionState)
         // 한 이벤트에 UTF-16 16개까지: 글자(이모지 포함)가 잘리지 않게 묶는다
-        var chunk: [UniChar] = []
-        func flush() {
-            guard !chunk.isEmpty else { return }
+        var chunks: [[Character]] = [[]]
+        var units = 0
+        for ch in s {
+            let n = String(ch).utf16.count
+            if units + n > 16 && !chunks[chunks.count - 1].isEmpty { chunks.append([]); units = 0 }
+            chunks[chunks.count - 1].append(ch)
+            units += n
+        }
+        // B14: Chromium 앱(Termix 등)은 1글자 이벤트는 키 경로로 바로, 여러 글자 이벤트는 입력 경로로 늦게 처리한다.
+        // 여러 글자 뒤에 1글자가 따라오면 순서가 뒤집혀 마지막 글자가 앞에 붙으므로 마지막 묶음이 1글자가 되지 않게 한 글자 넘긴다.
+        if chunks.count > 1, chunks[chunks.count - 1].count == 1, chunks[chunks.count - 2].count > 1 {
+            let moved = chunks[chunks.count - 2].removeLast()
+            chunks[chunks.count - 1].insert(moved, at: 0)
+        }
+        for chunk in chunks where !chunk.isEmpty {
+            let u = Array(String(chunk).utf16)
             for down in [true, false] {
                 let e = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: down)
                 e?.flags = []
-                e?.keyboardSetUnicodeString(stringLength: chunk.count, unicodeString: chunk)
+                e?.keyboardSetUnicodeString(stringLength: u.count, unicodeString: u)
                 post(e)
             }
-            chunk = []
         }
-        for ch in s {
-            let u = Array(String(ch).utf16)
-            if chunk.count + u.count > 16 { flush() }
-            chunk += u
-        }
-        flush()
     }
 
     private static func post(_ e: CGEvent?) {
