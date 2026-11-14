@@ -52,10 +52,32 @@ enum CommitGuard {
         115, 119, 116, 121, 117 // Home, End, PageUp, PageDown, Forward Delete
     ]
 
+    /// 입력기가 아직 받지 못한 Backspace 수 (입력기가 받으면 claimBackspace로 가져감)
+    private static var unclaimedBackspaces = 0
+
+    /// 입력기가 Backspace를 직접 받았으면 탭 쪽 처리를 취소 (두 번 지우지 않게)
+    static func claimBackspace() {
+        if unclaimedBackspaces > 0 { unclaimedBackspaces -= 1 }
+    }
+
     private static func noteKey(_ event: CGEvent) {
         if event.getIntegerValueField(.eventSourceUserData) == KeySender.marker { return }   // 우리가 보낸 키
         let code = event.getIntegerValueField(.keyboardEventKeycode)
+        // B15: 맥 터미널은 조합 글자가 없으면 Backspace도 입력기에 안 넘긴다 (실기 DIAG).
+        // 입력기가 0.05초 안에 받지 않으면 여기서 기록의 마지막 글자를 지운다.
+        if code == 51 && event.flags.intersection([.maskCommand, .maskControl, .maskAlternate]).isEmpty {
+            unclaimedBackspaces += 1
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                guard unclaimedBackspaces > 0 else { return }
+                unclaimedBackspaces -= 1
+                if let c = InputController.active, c.hanja != nil || c.emojiSession != nil { return }
+                TypedText.dropLast()
+            }
+            return
+        }
+        // ⌥Backspace(낱말 지우기)도 기록을 끊는다
         let shortcut = !event.flags.intersection([.maskCommand, .maskControl]).isEmpty
+            || (code == 51 && event.flags.contains(.maskAlternate))
         guard breakKeys.contains(code) || shortcut else { return }
         // 입력기가 이 키를 받으면 조합 확정·기록이 먼저 처리되도록 조금 뒤에 끊는다
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {

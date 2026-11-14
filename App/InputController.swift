@@ -140,6 +140,7 @@ final class InputController: IMKInputController {
         // DIAG(B15 임시): 키마다 번호·우리 키 판정·표식·한/영·기록 길이 (글자 내용은 남기지 않음). 진단 끝나면 제거
         keyLog.info("DIAG key=\(event.keyCode, privacy: .public) n=\(event.characters?.count ?? -1, privacy: .public) ours=\(ours, privacy: .public) mark=\(event.cgEvent?.getIntegerValueField(.eventSourceUserData) == KeySender.marker, privacy: .public) han=\(ModeState.hangul, privacy: .public) typed=\(TypedText.text.count, privacy: .public)")
         if ours { return false }   // 우리가 흉내 내 보낸 키는 그대로 통과
+        if event.keyCode == Key.delete { CommitGuard.claimBackspace() }   // B15: 탭 쪽 대신 지우기 취소
 
         // B12: 걸어둔 글자가 있으면 먼저 처리. Backspace는 그 글자만 지우고, 그 밖의 키는 넣은 뒤 평소대로
         if !pendingLiteral.isEmpty {

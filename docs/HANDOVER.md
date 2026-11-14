@@ -90,6 +90,8 @@
 - [ ] B15. 맥 터미널에서 Enter 뒤에도 글자 기록(TypedText)이 남아 다음 줄 바로잡기에 이전 줄 글자가 섞임 (실기 로그: 3번째 낱말 18자 = 이전 줄 8자 + 10자), 첫 줄도 글자가 겹침(`이진이진석이진석`) — **수정, 실기 확인 필요**. `InputController.handle`에 DIAG 임시 로그 있음 (확인 끝나면 제거).
   - 진단(실기 DIAG): 맥 터미널에서 **Enter keyDown이 입력기에 아예 오지 않음** (key=36 줄 없음, 다음 줄 시작 때 typed=3 그대로). 우리가 보낸 Backspace·글자 키도 입력기에 안 옴(겹쳐 기록되는 문제는 아님).
   - 수정: `CommitGuard`의 이벤트 탭에 keyDown 추가 → Return·Enter·Tab·Esc·방향키·Home/End/PageUp/PageDown/Forward Delete·⌘/⌃ 조합이면 0.05초 뒤 `TypedText.clear()` (우리가 보낸 키·한자/이모지 창 열림 중은 제외).
+  - 실기 2차 진단: 조합 글자가 없을 때 **Backspace도 입력기에 안 옴** (abc + Backspace 3번 → key=51 줄 없음) → 기록에 지운 글자가 남아 다음 바로잡기에 섞임 (`ubuntu` → `kgwubuubuntu`).
+  - 수정: 탭이 Backspace를 보면 `unclaimedBackspaces`+1, 입력기가 받으면 `CommitGuard.claimBackspace()`로 취소, 0.05초 안에 안 받으면 `TypedText.dropLast()`. ⌥Backspace는 기록 끊기.
 - [x] B12. Termix에서 일부 기호 키가 원래 글자로 입력됨 (390의 Shift+쉼표·마침표 → `<` `>`) — **원인 재확정·우회 구현·실기 확인 완료 (2026-11-14)**.
   - 원인: Termix는 네이티브가 아니라 **Electron + xterm.js**. 입력기가 조합 글자 없이 1자만 넣으면 Chromium(`render_widget_host_view_cocoa.mm` keyEvent)이 원래 키 정보(key=`<`)로 keydown을 보내고 넣은 글자(`2`)는 keypress로 보낸다. xterm.js `_keyDown`은 한 글자 키를 `ev.key`로 바로 셸에 보내고 keypress를 버린다. 단 key가 A~Z 대문자면 keypress로 미루는 HACK이 있어서 Shift+M(→1)·J(→4)는 정상이었던 것 (11-13 진단의 "Shift 키만 깨짐" 구분은 틀림 — M·J도 Shift 키).
   - 예측(실기로 확인할 것): ① 한글 조합 중(밑줄) 바로 뒤의 Shift+쉼표는 정상 (조합 글자가 있으면 Chromium이 keydown을 229로 보냄) ② 391 자판은 Shift 없는 `-` `[` `]` `\` `` ` `` 등 기호 키 21개도 같은 증상.
@@ -122,4 +124,5 @@
 | 2026-11-14 | Claude | B13 4차 수정: Chromium 터미널에선 밑줄 글자까지 Backspace |
 | 2026-11-14 | 진석 + Claude | B13 실기 확인 완료. B14 발견(긴 문장 연속 바로잡기 시 마지막 글자가 맨 앞으로) 및 수정: 마지막 1글자 묶음 방지. **실기 확인 필요** |
 | 2026-11-14 | 진석 + Claude | B14 실기 확인(Termix 정상). B15 발견(맥 터미널 Enter 뒤 기록 잔존) — DIAG 임시 로그 추가 |
-| 2026-11-14 | 진석 + Claude | B15 진단: 맥 터미널은 Enter를 입력기에 안 넘김 → 이벤트 탭에서 줄 바꿈·이동 키를 보고 기록 끊기. **실기 확인 필요** |
+| 2026-11-14 | 진석 + Claude | B15 진단: 맥 터미널은 Enter를 입력기에 안 넘김 → 이벤트 탭에서 줄 바꿈·이동 키를 보고 기록 끊기 |
+| 2026-11-14 | 진석 + Claude | B15 2차: 맥 터미널은 조합 없을 때 Backspace도 안 넘김 → 탭에서 Backspace 보고 기록 맞춤(입력기가 받으면 취소). **실기 확인 필요** |
