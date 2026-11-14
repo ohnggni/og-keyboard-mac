@@ -116,6 +116,15 @@ extension InputController {
             let cursor = a + (composing as NSString).length
             let n = (oldRegion as NSString).length
             client.insertText(newRegion, replacementRange: NSRange(location: max(0, cursor - n), length: n))
+        } else if held > 0 && ChromiumApps.contains(app) {
+            // B13: Termix 등은 밑줄이 사라진 직후의 첫 키를 버린다 (실기: 확정 후 다른 키를 거쳐 잠시 뒤 바로잡기하면 정상).
+            // 버려도 되는 Shift를 먼저 보내고 잠깐 기다린 뒤 지운다.
+            KeySender.nudge()
+            let n = max(0, oldRegion.count - held)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                KeySender.backspaces(n)
+                KeySender.type(newRegion)
+            }
         } else {
             KeySender.backspaces(max(0, oldRegion.count - held))
             KeySender.type(newRegion)
