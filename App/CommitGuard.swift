@@ -5,11 +5,14 @@ import Cocoa
 /// 그때 조합 중이던 글자를 보내면 Electron 앱(Claude 등)·터미널은 떠난 칸으로 온 글자를 버린다.
 /// 그래서 클릭·왼쪽 ⌘가 앱에 전달되기 직전에 가로채 조합 중인 글자를 먼저 확정하고, 원래 동작은 그대로 보낸다.
 /// (손쉬운 사용 권한 필요. 조합 중인 글자가 없으면 아무것도 하지 않는다)
+///
+/// B15: 맥 터미널은 Enter 등 일부 키를 입력기에 넘기지 않는다 (실기 DIAG: Enter keyDown이 입력기에 안 옴).
+/// 그래서 글자 기록(TypedText)이 줄을 넘어 남아 다음 줄 바로잡기에 섞였다 → 여기서 키를 보고 기록을 끊는다.
 enum CommitGuard {
     private static var tap: CFMachPort?
 
     static func start() {
-        let types: [CGEventType] = [.leftMouseDown, .rightMouseDown, .otherMouseDown, .flagsChanged]
+        let types: [CGEventType] = [.leftMouseDown, .rightMouseDown, .otherMouseDown, .flagsChanged, .keyDown]
         let mask = types.reduce(CGEventMask(0)) { $0 | (CGEventMask(1) << CGEventMask($1.rawValue)) }
         guard let t = CGEvent.tapCreate(
             tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
@@ -18,6 +21,8 @@ enum CommitGuard {
                 switch type {
                 case .tapDisabledByTimeout, .tapDisabledByUserInput:
                     CommitGuard.reenable()
+                case .keyDown:
+                    CommitGuard.noteKey(event)
                 case .flagsChanged:
                     // 왼쪽 ⌘(55)를 누를 때만: ⌘Tab·⌘단축키 직전에 확정 (오른쪽 ⌘는 한/영 키라 제외)
                     if event.getIntegerValueField(.keyboardEventKeycode) == 55, event.flags.contains(.maskCommand) {
@@ -37,6 +42,26 @@ enum CommitGuard {
         CFRunLoopAddSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(nil, t, 0), .commonModes)
         CGEvent.tapEnable(tap: t, enable: true)
         keyLog.info("확정 보호 켜짐")
+    }
+
+    /// 줄 바꿈·커서 이동·단축키면 글자 기록을 끊는다 (입력기가 이 키를 받든 못 받든)
+    private static let breakKeys: Set<Int64> = [
+        36, 76,                 // Return, 키패드 Enter
+        48, 53,                 // Tab, Esc
+        123, 124, 125, 126,     // 방향키
+        115, 119, 116, 121, 117 // Home, End, PageUp, PageDown, Forward Delete
+    ]
+
+    private static func noteKey(_ event: CGEvent) {
+        if event.getIntegerValueField(.eventSourceUserData) == KeySender.marker { return }   // 우리가 보낸 키
+        let code = event.getIntegerValueField(.keyboardEventKeycode)
+        let shortcut = !event.flags.intersection([.maskCommand, .maskControl]).isEmpty
+        guard breakKeys.contains(code) || shortcut else { return }
+        // 입력기가 이 키를 받으면 조합 확정·기록이 먼저 처리되도록 조금 뒤에 끊는다
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            if let c = InputController.active, c.hanja != nil || c.emojiSession != nil { return }   // 후보 창 안의 이동
+            TypedText.clear()
+        }
     }
 
     private static func reenable() {
