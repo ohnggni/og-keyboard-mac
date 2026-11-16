@@ -1,5 +1,6 @@
 // 터미널 화면의 마지막 줄을 손쉬운 사용으로 읽을 수 있는지 확인 (암호 프롬프트 자동 영문 가능성 확인용)
-// 실행: swift tools/termprobe.swift  (Ctrl+C로 끝). 실행한 터미널 앱에 손쉬운 사용 권한 필요.
+// 실행: swift tools/termprobe.swift [--tree]  (Ctrl+C로 끝). 실행한 터미널 앱에 손쉬운 사용 권한 필요.
+// --tree: 커서 칸 대신 창 전체 요소를 훑어 글자가 있는 마지막 요소를 찾는다 (Termix 등 웹 기반 터미널용)
 // 앞에 있는 앱의 커서 칸에서 글자를 읽어 마지막 줄(최대 80자)이 바뀔 때마다 출력한다.
 import Cocoa
 import ApplicationServices
@@ -15,6 +16,20 @@ func str(_ e: AXUIElement, _ name: String) -> String? {
     return v as? String
 }
 
+/// 창 아래 요소를 훑어 글자가 있는 요소들의 (역할, 글자)를 모은다 (최대 4000개)
+func collect(_ e: AXUIElement, _ out: inout [(String, String)], _ budget: inout Int, depth: Int = 0) {
+    guard budget > 0, depth < 40 else { return }
+    budget -= 1
+    let role = str(e, "AXRole") ?? "?"
+    for k in ["AXValue", "AXTitle", "AXDescription"] {
+        if let t = str(e, k)?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty { out.append((role, t)); break }
+    }
+    var c: CFTypeRef?
+    guard AXUIElementCopyAttributeValue(e, kAXChildrenAttribute as CFString, &c) == .success, let kids = c as? [AXUIElement] else { return }
+    for k in kids { collect(k, &out, &budget, depth: depth + 1) }
+}
+
+let treeMode = CommandLine.arguments.contains("--tree")
 var last = ""
 var enabled = Set<pid_t>()
 print("다른 터미널 앱을 앞으로 가져가 sudo 등으로 암호 프롬프트를 띄워 보십시오.")
@@ -27,8 +42,19 @@ Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
         AXUIElementSetAttributeValue(ax, "AXManualAccessibility" as CFString, kCFBooleanTrue)
         enabled.insert(app.processIdentifier)
     }
-    var f: CFTypeRef?
     let name = app.bundleIdentifier ?? "?"
+    if treeMode {
+        var w: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(ax, kAXFocusedWindowAttribute as CFString, &w) == .success, let win = w else { return }
+        var out: [(String, String)] = []
+        var budget = 4000
+        collect(win as! AXUIElement, &out, &budget)
+        let tail = out.suffix(3).map { "\($0.0)「\(String($0.1.split(whereSeparator: \.isNewline).last ?? "").suffix(60))」" }.joined(separator: " / ")
+        let line = "[\(name)] 글자 있는 요소 \(out.count)개 · 마지막 3개: \(tail)"
+        if line != last { print(line); last = line }
+        return
+    }
+    var f: CFTypeRef?
     guard AXUIElementCopyAttributeValue(ax, kAXFocusedUIElementAttribute as CFString, &f) == .success, let focused = f else {
         let line = "[\(name)] 커서 칸 없음"
         if line != last { print(line); last = line }
