@@ -1,4 +1,5 @@
 import Cocoa
+import Carbon
 import ApplicationServices
 
 /// F2: 터미널에서 암호·계정을 물으면 잠깐 영문으로.
@@ -83,6 +84,24 @@ enum TerminalPrompt {
         ModeIndicator.shared.show(hangul: false)
         switched = true
         keyLog.info("터미널 암호 프롬프트(\(how, privacy: .public)) → 영문")
+        watchSecureInput()
+    }
+
+    /// 맥 터미널은 암호 프롬프트에서 보안 입력을 켜고, 그동안 이벤트 탭은 Enter를 못 본다.
+    /// 보안 입력이 켜졌다가 꺼지면 암호 입력이 끝난 것으로 보고 되돌린다.
+    private static var secureTimer: Timer?
+    private static func watchSecureInput() {
+        secureTimer?.invalidate()
+        var sawSecure = false
+        secureTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { t in
+            guard switched else { t.invalidate(); return }
+            if IsSecureEventInputEnabled() { sawSecure = true }
+            else if sawSecure {
+                t.invalidate()
+                keyLog.info("보안 입력 꺼짐 → 암호 입력 끝으로 봄")
+                restore()
+            }
+        }
     }
 
     private static func restore() {
