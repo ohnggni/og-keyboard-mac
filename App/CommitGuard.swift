@@ -79,6 +79,9 @@ enum CommitGuard {
         let shortcut = !event.flags.intersection([.maskCommand, .maskControl]).isEmpty
             || (code == 51 && event.flags.contains(.maskAlternate))
         guard breakKeys.contains(code) || shortcut else { return }
+        // F2: Enter 뒤 암호 프롬프트 확인 (기록을 끊기 전에 친 줄을 넘김), Ctrl+C면 원래대로
+        if code == 36 || code == 76 { TerminalPrompt.onEnter(line: TypedText.text) }
+        else if code == 8 && event.flags.contains(.maskControl) { TerminalPrompt.onCancel() }
         // 입력기가 이 키를 받으면 조합 확정·기록이 먼저 처리되도록 조금 뒤에 끊는다
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             if let c = InputController.active, c.hanja != nil || c.emojiSession != nil { return }   // 후보 창 안의 이동

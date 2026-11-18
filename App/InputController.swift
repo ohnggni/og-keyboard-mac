@@ -304,6 +304,7 @@ final class InputController: IMKInputController {
 
     func toggleMode(_ sender: Any!) {
         commit(sender)
+        TerminalPrompt.userToggled()
         ModeState.hangul.toggle()
         keyLog.info("toggle → \(ModeState.hangul ? "한글" : "영문", privacy: .public)")
         ModeIndicator.shared.show(hangul: ModeState.hangul)

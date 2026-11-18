@@ -61,7 +61,9 @@
   - 메뉴: 필수 권한이 빠지면 맨 위에 ⚠️ 줄(누르면 창), 항상 '권한 및 설정 점검…' 항목. 필수 권한이 빠진 채 새 빌드(CFBundleVersion)가 처음 뜨면 창 자동 1회.
   - 실기로 확인할 것: ① tccutil reset이 관리자 권한 없이 되는지 ② `TISRomanSwitchState` 값이 실제 설정과 맞는지 ③ exit(0) 뒤 다음 키 입력 때 입력기가 다시 뜨는지.
 
-- [ ] F2. 터미널 암호·계정 프롬프트(`[sudo] password for`, `Password:` 등)에서 자동 영문 — **조사 중**. Enter 뒤 화면 마지막 줄을 손쉬운 사용으로 읽어 판정하는 방식 검토. 터미널별 읽기 가능 여부 확인용 `tools/termprobe.swift` 추가.
+- [ ] F2. 터미널 암호·계정 프롬프트(`[sudo] password for`, `Password:` 등)에서 자동 영문 — **구현, 실기 확인 필요**. `App/TerminalPrompt.swift`, 판정 규칙 `HangulCore/PromptRules.swift`(+테스트).
+  - 조사(`tools/termprobe.swift`): iTerm2·맥 터미널은 커서 칸(AXTextArea)의 AXValue로 화면 글자를 읽을 수 있음(`Password:` 확인). Termix는 커서 칸·창 전체(`--tree`) 모두 화면 글자 없음.
+  - 동작: 이벤트 탭이 Enter를 보면(터미널 앱, '영문·숫자 칸에서 자동 영문' 켜짐일 때) 0.3·0.8·1.5·3초에 화면 마지막 줄을 백그라운드로 읽어 프롬프트면 영문. 화면을 못 읽으면 Enter 직전 친 줄(TypedText)이 sudo·su·ssh·passwd·mysql -p 등이면 영문. 다음 Enter·Ctrl+C에서 한글로 되돌림(직접 한/영을 바꾸면 되돌리지 않음). ssh 첫 접속의 `(yes/no/...)?`도 포함.
 
 ### 2단계
 
@@ -130,3 +132,4 @@
 | 2026-11-14 | 진석 + Claude | B15 2차: 맥 터미널은 조합 없을 때 Backspace도 안 넘김 → 탭에서 Backspace 보고 기록 맞춤(입력기가 받으면 취소) |
 | 2026-11-14 | 진석 + Claude | B15 실기 확인 완료, DIAG 제거. v0.5.0 릴리스 준비 (F1 권한 점검 창·B13·B14·B15). F1은 창 표시만 확인, 권한 초기화·입력기 다시 시작 버튼은 아직 실기 미확인 |
 | 2026-11-17 | Claude | F2 조사 시작: 터미널 화면 마지막 줄 읽기 확인 도구 `tools/termprobe.swift` |
+| 2026-11-18 | 진석 + Claude | F2 조사 결과(iTerm2·맥 터미널 읽힘, Termix 안 읽힘) → 화면 판정 + 명령 판정 혼합으로 구현. **실기 확인 필요** |
