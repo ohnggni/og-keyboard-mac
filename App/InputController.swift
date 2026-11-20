@@ -91,6 +91,8 @@ final class InputController: IMKInputController {
     var emojiSession: EmojiSession?
     /// B12: Chromium 터미널에서 기호 키가 바꾼 글자를 조합 중 글자로 잠깐 걸어둔 것 (다음 키·확정 때 넣음)
     var pendingLiteral = ""
+    /// DIAG(B17 임시): 직전에 앱에 건 밑줄 글자 길이
+    var lastMarkedLen = 0
     /// 확정 안 된 글자가 있는지 (조합 중 한글 또는 걸어둔 글자)
     var hasComposition: Bool { !engine.isEmpty || !pendingLiteral.isEmpty }
     /// 오른쪽 Option 두 번 누르기 판단용
@@ -124,12 +126,14 @@ final class InputController: IMKInputController {
     }
 
     override func deactivateServer(_ sender: Any!) {
+        keyLog.info("B17DIAG 입력기 연결 끊김 조합중=\(self.hasComposition, privacy: .public)")
         closeHanja()
         closeEmoji()
         commit(sender)
     }
 
     override func commitComposition(_ sender: Any!) {
+        keyLog.info("B17DIAG 앱이 확정 요청 (commitComposition) 조합중=\(self.hasComposition, privacy: .public)")
         commit(sender)
     }
 
@@ -353,6 +357,13 @@ final class InputController: IMKInputController {
 
     func updateMarked(_ sender: Any!) {
         let s = engine.composing() + pendingLiteral
+        // DIAG(B17 임시): 앱이 아직 밑줄을 들고 있는지 (글자 내용은 남기지 않음)
+        if let c = textClient(sender) {
+            let mr = c.markedRange(), sr = c.selectedRange()
+            let m = mr.location == NSNotFound ? "없음" : "\(mr.location),\(mr.length)"
+            keyLog.info("B17DIAG 밑줄 이전\(self.lastMarkedLen)자 → \((s as NSString).length)자 · 앱밑줄=\(m, privacy: .public) 커서=\(sr.location),\(sr.length) [\(c.bundleIdentifier() ?? "?", privacy: .public)]")
+        }
+        lastMarkedLen = (s as NSString).length
         textClient(sender)?.setMarkedText(s,
             selectionRange: NSRange(location: (s as NSString).length, length: 0),
             replacementRange: NSRange(location: NSNotFound, length: NSNotFound))
@@ -362,6 +373,8 @@ final class InputController: IMKInputController {
         guard hasComposition else { return }
         let text = engine.flush() + pendingLiteral
         pendingLiteral = ""
+        keyLog.info("B17DIAG 확정 \((text as NSString).length)자")
+        lastMarkedLen = 0
         insert(text, sender)
     }
 }
