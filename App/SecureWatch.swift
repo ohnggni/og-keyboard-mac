@@ -3,11 +3,15 @@ import Carbon
 
 /// B16: 보안 입력(비밀번호 칸·인증 보안 모듈 등)이 켜지면 맥이 모든 입력기를 막는다.
 /// 사용자는 한/영이 안 먹거나 먹통이라고 느끼므로, 켜질 때와 풀릴 때 표시창으로 알린다.
-/// 풀리면 맥이 OG키보드를 되살리므로 따로 할 일은 없다. 3초 넘게 다른 앱이 쥐고 있으면 그 앱 이름을 알린다.
+/// 3초 넘게 다른 앱이 쥐고 있으면 그 앱 이름을 알린다.
+/// 풀리면 맥이 원래 입력기로 되돌려야 하는데, 보안 칸을 빠르게 오가 켜짐·꺼짐이 반복되면 순정(ABC)에 남겨 버린다
+/// (실기 로그: 풀린 뒤 계속 'OG 아님'). 켜지기 직전에 OG키보드였으면 풀린 뒤 직접 되돌린다.
 enum SecureWatch {
     private static var on = false
     private static var since = Date()
     private static var warnedStuck = false
+    /// 보안 입력이 꺼져 있던 마지막 순간에 OG키보드였는지
+    private static var ogBeforeSecure = false
 
     static func start() {
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in tick() }
@@ -15,6 +19,7 @@ enum SecureWatch {
 
     private static func tick() {
         let now = IsSecureEventInputEnabled()
+        if !now && !on { ogBeforeSecure = InputSources.ogIsCurrent }
         if now && !on {
             on = true
             since = Date()
@@ -31,7 +36,14 @@ enum SecureWatch {
         } else if !now && on {
             on = false
             keyLog.info("보안 입력 풀림")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            let wasOG = ogBeforeSecure
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                guard !IsSecureEventInputEnabled() else { return }   // 그새 다시 켜졌으면 다음 풀림 때
+                if !InputSources.ogIsCurrent, wasOG,
+                   let app = NSWorkspace.shared.frontmostApplication?.bundleIdentifier, !Fallback.apps.contains(app) {
+                    let ok = InputSources.select(InputSources.ogID)
+                    keyLog.info("보안 입력 뒤 순정에 남음 → OG키보드로 되돌림 \(ok ? "성공" : "실패", privacy: .public)")
+                }
                 if InputSources.ogIsCurrent { ModeIndicator.shared.show(hangul: ModeState.hangul) }
             }
         }
