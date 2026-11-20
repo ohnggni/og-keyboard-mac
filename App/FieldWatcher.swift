@@ -90,40 +90,66 @@ enum FieldWatcher {
         focusGen += 1
         let g = focusGen, t0 = Date()
         diag("포커스 g=\(g) 한글=\(ModeState.hangul) 보안입력=\(IsSecureEventInputEnabled())")
+        checkFocus(gen: g, queuedAt: t0, fallback: e)
+        // B16: 알림이 실제 포커스 이동보다 먼저 오면 그 순간엔 아직 이전 칸(이름 칸 등)이 답으로 온다 (간헐 증상).
+        // 조금 뒤 두 번 더 물어 바로잡는다. 같은 칸이면 apply가 걸러낸다.
+        for delay in [0.25, 0.7] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                guard g == focusGen else { return }
+                checkFocus(gen: g, queuedAt: Date(), fallback: nil, recheck: true)
+            }
+        }
+    }
+
+    /// 입력기가 새 칸에 연결될 때 (사파리는 칸마다 다시 연결): 포커스 알림이 늦거나 없을 때의 대비
+    static func recheckNow() {
+        guard enabled, watchedApp != nil else { return }
+        focusGen += 1
+        let g = focusGen
+        diag("입력기 연결 g=\(g)")
+        checkFocus(gen: g, queuedAt: Date(), fallback: nil, recheck: true)
+    }
+
+    /// 작업 줄에서 앱에 지금 포커스된 칸을 묻고 판정한다.
+    /// B16: 사파리는 웹페이지 칸으로 옮겨도 알림에 바깥 그룹(AXGroup)을 실어 보낸다 (실기 axprobe로 확인:
+    /// 앱에 직접 물으면 AXTextField·주민등록번호가 나옴). 그래서 알림 요소 대신 앱에 지금 포커스된 칸을 묻는다.
+    private static func checkFocus(gen g: Int, queuedAt t0: Date, fallback: AXUIElement?, recheck: Bool = false) {
         let app = watchedApp
         queue.async {
-            // B16: 사파리는 웹페이지 칸으로 옮겨도 알림에 바깥 그룹(AXGroup)을 실어 보낸다 (실기 axprobe로 확인:
-            // 앱에 직접 물으면 AXTextField·주민등록번호가 나옴). 그래서 알림 요소 대신 앱에 지금 포커스된 칸을 다시 묻는다.
-            var target = e
+            var target = fallback
             if let app = app {
                 var f: CFTypeRef?
                 if AXUIElementCopyAttributeValue(app, kAXFocusedUIElementAttribute as CFString, &f) == .success, let f = f {
-                    target = f as! AXUIElement
+                    target = (f as! AXUIElement)
                 }
             }
-            classify(target, gen: g, queuedAt: t0)
+            guard let t = target else { return }
+            classify(t, gen: g, queuedAt: t0, recheck: recheck)
         }
     }
 
     /// 작업 줄: 칸 종류를 알아보고 결과만 메인으로
-    private static func classify(_ e: AXUIElement, gen: Int, queuedAt t0: Date) {
+    private static func classify(_ e: AXUIElement, gen: Int, queuedAt t0: Date, recheck: Bool = false) {
         let start = Date()
         AXUIElementSetMessagingTimeout(e, timeout)
         let (english, kind) = isEnglishFieldDiag(e)
         let end = Date()
         DispatchQueue.main.async {
             let wait = start.timeIntervalSince(t0), work = end.timeIntervalSince(start)
-            diag(String(format: "판정 g=%d 최신=%d 대기 %.2fs 판정 %.2fs → %@ [%@]", gen, focusGen, wait, work, english ? "영문" : "그대로", kind))
-            apply(e, english, gen: gen)
+            diag(String(format: "%@판정 g=%d 최신=%d 대기 %.2fs 판정 %.2fs → %@ [%@]", recheck ? "재확인 " : "", gen, focusGen, wait, work, english ? "영문" : "그대로", kind))
+            apply(e, english, gen: gen, recheck: recheck)
         }
     }
 
     /// 칸마다 따로 판단한다 (윈도우와 같은 방식):
     ///  - 영문 칸에 들어올 때마다 그 칸은 영문으로 시작. 칸 안에서 직접 한글로 바꾸면 그 칸에서만 존중
     ///  - 영문 칸들을 다 벗어나 일반 칸으로 가면, 처음 영문 칸에 들어오기 직전 상태로 되돌림
-    private static func apply(_ e: AXUIElement, _ english: Bool, gen: Int = -1) {
+    private static func apply(_ e: AXUIElement, _ english: Bool, gen: Int = -1, recheck: Bool = false) {
         guard enabled, InputSources.ogIsCurrent else { diag("적용안함 g=\(gen) (꺼짐 또는 OG 아님)"); return }
-        if let last = lastElement, CFEqual(last, e) { diag("적용안함 g=\(gen) (같은 칸)"); return }
+        // B16: 이미 다음 칸으로 옮겨간 뒤 도착한 낡은 결과는 버린다 (지금 칸을 뒤집지 않게)
+        if gen >= 0 && gen < focusGen { diag("버림 g=\(gen) 최신=\(focusGen) (낡은 결과)"); return }
+        if let last = lastElement, CFEqual(last, e) { if !recheck { diag("적용안함 g=\(gen) (같은 칸)") }; return }
+        if recheck { diag("재확인으로 바로잡음 g=\(gen)") }
         lastElement = e
         diag("적용 g=\(gen)\(gen == focusGen ? "" : " ⚠️낡은결과") 영문칸=\(english) 한글=\(ModeState.hangul) 원래=\(originalHangul.map { "\($0)" } ?? "없음")")
         if english {

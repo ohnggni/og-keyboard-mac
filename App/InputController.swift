@@ -120,6 +120,7 @@ final class InputController: IMKInputController {
         tapKey = nil
         TypedText.clear()
         ModeState.activate(app: textClient(sender)?.bundleIdentifier())
+        FieldWatcher.recheckNow()   // B16: 포커스 알림이 늦거나 없을 때 대비
     }
 
     override func deactivateServer(_ sender: Any!) {
