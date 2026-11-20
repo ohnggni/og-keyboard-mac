@@ -33,6 +33,10 @@ enum FieldWatcher {
     /// 한 번 물을 때 최대 대기 시간
     private static let timeout: Float = 0.25
 
+    // DIAG(B16 임시): 포커스 세대 번호. 포커스 알림마다 늘린다 (메인에서만). 진단 끝나면 정리
+    private static var focusGen = 0
+    private static func diag(_ s: String) { keyLog.info("B16DIAG \(s, privacy: .public)") }
+
     static func start() {
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { n in
@@ -65,34 +69,47 @@ enum FieldWatcher {
         CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(o), .defaultMode)
         observer = o
         // 지금 포커스된 칸도 확인 (작업 줄에서)
+        focusGen += 1
+        let g = focusGen, t0 = Date()
+        diag("앱감시 g=\(g) \(app.bundleIdentifier ?? "?")")
         queue.async {
             var f: CFTypeRef?
             guard AXUIElementCopyAttributeValue(axApp, kAXFocusedUIElementAttribute as CFString, &f) == .success,
                   let f = f else { return }
-            classify(f as! AXUIElement)
+            classify(f as! AXUIElement, gen: g, queuedAt: t0)
         }
     }
 
     /// 포커스가 바뀌었다는 알림(메인): 칸 알아보기는 작업 줄로 넘긴다
     private static func focusChanged(_ e: AXUIElement) {
         guard enabled else { return }
-        queue.async { classify(e) }
+        focusGen += 1
+        let g = focusGen, t0 = Date()
+        diag("포커스 g=\(g) 한글=\(ModeState.hangul) 보안입력=\(IsSecureEventInputEnabled())")
+        queue.async { classify(e, gen: g, queuedAt: t0) }
     }
 
     /// 작업 줄: 칸 종류를 알아보고 결과만 메인으로
-    private static func classify(_ e: AXUIElement) {
+    private static func classify(_ e: AXUIElement, gen: Int, queuedAt t0: Date) {
+        let start = Date()
         AXUIElementSetMessagingTimeout(e, timeout)
-        let english = isEnglishField(e)
-        DispatchQueue.main.async { apply(e, english) }
+        let (english, kind) = isEnglishFieldDiag(e)
+        let end = Date()
+        DispatchQueue.main.async {
+            let wait = start.timeIntervalSince(t0), work = end.timeIntervalSince(start)
+            diag(String(format: "판정 g=%d 최신=%d 대기 %.2fs 판정 %.2fs → %@ [%@]", gen, focusGen, wait, work, english ? "영문" : "그대로", kind))
+            apply(e, english, gen: gen)
+        }
     }
 
     /// 칸마다 따로 판단한다 (윈도우와 같은 방식):
     ///  - 영문 칸에 들어올 때마다 그 칸은 영문으로 시작. 칸 안에서 직접 한글로 바꾸면 그 칸에서만 존중
     ///  - 영문 칸들을 다 벗어나 일반 칸으로 가면, 처음 영문 칸에 들어오기 직전 상태로 되돌림
-    private static func apply(_ e: AXUIElement, _ english: Bool) {
-        guard enabled, InputSources.ogIsCurrent else { return }
-        if let last = lastElement, CFEqual(last, e) { return }
+    private static func apply(_ e: AXUIElement, _ english: Bool, gen: Int = -1) {
+        guard enabled, InputSources.ogIsCurrent else { diag("적용안함 g=\(gen) (꺼짐 또는 OG 아님)"); return }
+        if let last = lastElement, CFEqual(last, e) { diag("적용안함 g=\(gen) (같은 칸)"); return }
         lastElement = e
+        diag("적용 g=\(gen)\(gen == focusGen ? "" : " ⚠️낡은결과") 영문칸=\(english) 한글=\(ModeState.hangul) 원래=\(originalHangul.map { "\($0)" } ?? "없음")")
         if english {
             // 영문 칸 묶음의 시작: 그 직전 상태를 기억 (원래 영문이었으면 나갈 때도 영문 그대로)
             if originalHangul == nil {
@@ -131,6 +148,13 @@ enum FieldWatcher {
     }
 
     // MARK: 칸 알아보기
+
+    /// DIAG: 판정 + 칸 종류 요약 (역할·역할설명만, 입력값은 남기지 않음)
+    private static func isEnglishFieldDiag(_ e: AXUIElement) -> (Bool, String) {
+        let english = isEnglishField(e)
+        let kind = [str(e, kAXRoleAttribute as String), str(e, kAXRoleDescriptionAttribute as String)].compactMap { $0 }.joined(separator: "/")
+        return (english, kind)
+    }
 
     /// 칸 정보를 모아 규칙(HangulCore/FieldRules)으로 판단
     static func isEnglishField(_ e: AXUIElement) -> Bool {

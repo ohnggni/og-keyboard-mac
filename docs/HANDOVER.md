@@ -97,6 +97,9 @@
   - 수정: `CommitGuard`의 이벤트 탭에 keyDown 추가 → Return·Enter·Tab·Esc·방향키·Home/End/PageUp/PageDown/Forward Delete·⌘/⌃ 조합이면 0.05초 뒤 `TypedText.clear()` (우리가 보낸 키·한자/이모지 창 열림 중은 제외).
   - 실기 2차 진단: 조합 글자가 없을 때 **Backspace도 입력기에 안 옴** (abc + Backspace 3번 → key=51 줄 없음) → 기록에 지운 글자가 남아 다음 바로잡기에 섞임 (`ubuntu` → `kgwubuubuntu`).
   - 수정: 탭이 Backspace를 보면 `unclaimedBackspaces`+1, 입력기가 받으면 `CommitGuard.claimBackspace()`로 취소, 0.05초 안에 안 받으면 `TypedText.dropLast()`. ⌥Backspace는 기록 끊기.
+- [ ] B16. 간편인증 등 칸을 차례로 옮겨 다니는 웹페이지에서 입력이 점점 엉망이 됨 (주민번호 뒷자리가 한글로 고정, 한/영 전환이 안 먹음, 입력 먹통) — **계측 중**.
+  - 가설(Muse 점검, 2026-11-20 의뢰): A. FieldWatcher 판정이 직렬 큐에서 지연·누적되고 `apply`가 도착 순서대로 적용해 낡은 결과가 지금 칸을 뒤집음(O6과 연결) B. 수동 한/영 전환 뒤에도 `originalHangul` 복원이 살아 있어 사용자 전환을 뒤집음 C. 보안 입력 중 먹통을 알리지 않음 D. iframe 등에서 포커스 알림 누락.
+  - 1단계 계측: `FieldWatcher`에 `B16DIAG` 임시 로그 (포커스 세대 번호, 판정 대기·소요 시간, 칸 역할, 적용/폐기, 낡은 결과 표시, 보안 입력 상태). 진단 끝나면 정리.
 - [x] B12. Termix에서 일부 기호 키가 원래 글자로 입력됨 (390의 Shift+쉼표·마침표 → `<` `>`) — **원인 재확정·우회 구현·실기 확인 완료 (2026-11-14)**.
   - 원인: Termix는 네이티브가 아니라 **Electron + xterm.js**. 입력기가 조합 글자 없이 1자만 넣으면 Chromium(`render_widget_host_view_cocoa.mm` keyEvent)이 원래 키 정보(key=`<`)로 keydown을 보내고 넣은 글자(`2`)는 keypress로 보낸다. xterm.js `_keyDown`은 한 글자 키를 `ev.key`로 바로 셸에 보내고 keypress를 버린다. 단 key가 A~Z 대문자면 keypress로 미루는 HACK이 있어서 Shift+M(→1)·J(→4)는 정상이었던 것 (11-13 진단의 "Shift 키만 깨짐" 구분은 틀림 — M·J도 Shift 키).
   - 예측(실기로 확인할 것): ① 한글 조합 중(밑줄) 바로 뒤의 Shift+쉼표는 정상 (조합 글자가 있으면 Chromium이 keydown을 229로 보냄) ② 391 자판은 Shift 없는 `-` `[` `]` `\` `` ` `` 등 기호 키 21개도 같은 증상.
@@ -135,3 +138,4 @@
 | 2026-11-17 | Claude | F2 조사 시작: 터미널 화면 마지막 줄 읽기 확인 도구 `tools/termprobe.swift` |
 | 2026-11-18 | 진석 + Claude | F2 조사 결과(iTerm2·맥 터미널 읽힘, Termix 안 읽힘) → 화면 판정 + 명령 판정 혼합으로 구현 |
 | 2026-11-18 | 진석 + Claude | F2 실기 1차: 맥 터미널 복귀 누락(보안 입력) 보완. Termix 증상 재현 확인 중 |
+| 2026-11-20 | Claude | B16 등록 (Muse 점검 의뢰서 기반), 1단계 계측: FieldWatcher `B16DIAG` 임시 로그 |
