@@ -15,6 +15,8 @@ enum FieldWatcher {
     }
 
     private static var observer: AXObserver?
+    /// 감시 중인 앱 (포커스 알림이 오면 이 앱에 지금 포커스된 칸을 다시 묻는다)
+    private static var watchedApp: AXUIElement?
     /// 마지막으로 본 칸 (같은 칸에 대한 알림이 여러 번 와도 한 번만 처리)
     private static var lastElement: AXUIElement?
     /// 영문 칸에 처음 들어가기 직전의 한/영. 영문 칸들을 다 벗어나면 이것으로 되돌린다 (nil = 바꾼 적 없음)
@@ -53,6 +55,7 @@ enum FieldWatcher {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(o), .defaultMode)
             observer = nil
         }
+        watchedApp = nil
         guard enabled, AXIsProcessTrusted(), let app = app,
               app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
         let pid = app.processIdentifier
@@ -68,6 +71,7 @@ enum FieldWatcher {
         AXObserverAddNotification(o, axApp, kAXFocusedUIElementChangedNotification as CFString, nil)
         CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(o), .defaultMode)
         observer = o
+        watchedApp = axApp
         // 지금 포커스된 칸도 확인 (작업 줄에서)
         focusGen += 1
         let g = focusGen, t0 = Date()
@@ -86,7 +90,19 @@ enum FieldWatcher {
         focusGen += 1
         let g = focusGen, t0 = Date()
         diag("포커스 g=\(g) 한글=\(ModeState.hangul) 보안입력=\(IsSecureEventInputEnabled())")
-        queue.async { classify(e, gen: g, queuedAt: t0) }
+        let app = watchedApp
+        queue.async {
+            // B16: 사파리는 웹페이지 칸으로 옮겨도 알림에 바깥 그룹(AXGroup)을 실어 보낸다 (실기 axprobe로 확인:
+            // 앱에 직접 물으면 AXTextField·주민등록번호가 나옴). 그래서 알림 요소 대신 앱에 지금 포커스된 칸을 다시 묻는다.
+            var target = e
+            if let app = app {
+                var f: CFTypeRef?
+                if AXUIElementCopyAttributeValue(app, kAXFocusedUIElementAttribute as CFString, &f) == .success, let f = f {
+                    target = f as! AXUIElement
+                }
+            }
+            classify(target, gen: g, queuedAt: t0)
+        }
     }
 
     /// 작업 줄: 칸 종류를 알아보고 결과만 메인으로

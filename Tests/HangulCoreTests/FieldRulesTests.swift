@@ -22,6 +22,15 @@ final class FieldRulesTests: XCTestCase {
         en(web([], placeholder: "name@example.com"))
     }
 
+    /// B16: 대법원 전자가족관계등록시스템·간편인증(oacx) 실측 칸 (axprobe)
+    func testCourtAndSimpleAuth() {
+        en(web(["주민등록번호 앞자리", "주민등록번호 앞자리"], id: "rrn1"))
+        en(web(["주민등록번호", "주민번호 앞자리"], placeholder: "주민번호 앞자리", id: "oacx_num1"))
+        en(web(["주민등록번호 뒷자리"], placeholder: "뒷자리", subrole: "AXSecureTextField"))
+        en(web(["휴대폰 번호", "휴대폰번호 뒷자리 여덟자리"], placeholder: "12341234", id: "oacx_phone2"))
+        ko(web(["성명", "배우자 성명"], id: "addNm"))
+    }
+
     func testPhone() {
         en(web(["휴대폰 번호"]))
         en(web([], placeholder: "010-0000-0000"))
