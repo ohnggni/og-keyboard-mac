@@ -27,6 +27,11 @@ final class ModeIndicator {
         display("A", caption: "대문자", color: Self.orange)
     }
 
+    /// 보안 입력 중 (B16): 그동안 맥이 모든 입력기를 막는다
+    func showSecure(_ caption: String) {
+        display("🔒", caption: caption, color: NSColor(white: 0.25, alpha: 0.94))
+    }
+
     /// 짧은 알림 (예: 한자 후보 없음 → 漢)
     func showMark(_ text: String) {
         display(text, caption: "", color: NSColor(white: 0.3, alpha: 0.92))
