@@ -15,6 +15,10 @@ enum SecureWatch {
     private static var lastWasOG = false
     /// 보안 입력 때문에 맥이 OG키보드 → 순정으로 바꿨음 (풀리면 되돌림)
     private static var systemSwitched = false
+    /// 마지막으로 풀린 때. 풀린 뒤 잠깐은 맥이 늦게 한 번 더 바꾼다 (실기: 되돌린 0.05초 뒤 ABC로)
+    private static var releasedAt = Date.distantPast
+    private static let grace: TimeInterval = 1.5
+    private static var inGrace: Bool { Date().timeIntervalSince(releasedAt) < grace }
 
     static func start() {
         lastWasOG = InputSources.ogIsCurrent
@@ -30,11 +34,15 @@ enum SecureWatch {
         let secure = IsSecureEventInputEnabled()
         // DIAG(B16 임시): 어떤 입력기로 바뀌었는지와 그 순간 보안 입력 여부
         keyLog.info("B16DIAG 입력기 바뀜 → \(InputSources.currentID, privacy: .public) 보안입력=\(secure, privacy: .public) 이전OG=\(lastWasOG, privacy: .public) 되돌릴것=\(systemSwitched, privacy: .public)")
-        if lastWasOG && !og && secure {
+        if !og && secure && (lastWasOG || systemSwitched) {
+            if !systemSwitched { keyLog.info("보안 입력 때문에 순정으로 바뀜 → 풀리면 되돌림") }
             systemSwitched = true
-            keyLog.info("보안 입력 때문에 순정으로 바뀜 → 풀리면 되돌림")
+        } else if !og && inGrace && systemSwitched {
+            // 풀린 직후 맥이 늦게 다시 순정으로 보냄 → 맥이 한 것, 바로 되돌림
+            keyLog.info("보안 입력 풀린 직후 맥이 다시 순정으로 바꿈 → 되돌림")
+            DispatchQueue.main.async { restoreIfNeeded() }
         } else if og {
-            systemSwitched = false
+            if !secure && !inGrace { systemSwitched = false }   // 풀린 직후엔 맥이 또 바꿀 수 있어 유지
         } else if !secure && !og {
             if systemSwitched { keyLog.info("보안 입력 밖에서 직접 바꿈 → 되돌리지 않음") }
             systemSwitched = false
@@ -59,10 +67,15 @@ enum SecureWatch {
             }
         } else if !now && on {
             on = false
+            releasedAt = Date()
             keyLog.info("보안 입력 풀림 (되돌릴 것=\(systemSwitched, privacy: .public))")
             restoreIfNeeded()
         } else if !now && systemSwitched {
-            restoreIfNeeded()   // 맥이 늦게 다시 순정으로 돌려놓는 경우까지 계속 확인
+            if InputSources.ogIsCurrent {
+                if !inGrace { systemSwitched = false }   // 풀린 뒤 잠깐 지켜보고 OG키보드면 끝
+            } else {
+                restoreIfNeeded()   // 맥이 늦게 다시 순정으로 돌려놓은 경우
+            }
         }
     }
 
