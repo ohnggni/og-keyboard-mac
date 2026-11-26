@@ -28,6 +28,8 @@ enum SecureWatch {
     private static func sourceChanged() {
         let og = InputSources.ogIsCurrent
         let secure = IsSecureEventInputEnabled()
+        // DIAG(B16 임시): 어떤 입력기로 바뀌었는지와 그 순간 보안 입력 여부
+        keyLog.info("B16DIAG 입력기 바뀜 → \(InputSources.currentID, privacy: .public) 보안입력=\(secure, privacy: .public) 이전OG=\(lastWasOG, privacy: .public) 되돌릴것=\(systemSwitched, privacy: .public)")
         if lastWasOG && !og && secure {
             systemSwitched = true
             keyLog.info("보안 입력 때문에 순정으로 바뀜 → 풀리면 되돌림")
@@ -67,6 +69,7 @@ enum SecureWatch {
     private static func restoreIfNeeded() {
         guard systemSwitched, !InputSources.ogIsCurrent else { return }
         if let app = NSWorkspace.shared.frontmostApplication?.bundleIdentifier, Fallback.apps.contains(app) { return }
+        keyLog.info("B16DIAG 되돌리기 시도: 지금 \(InputSources.currentID, privacy: .public) → \(InputSources.ogID, privacy: .public)")
         let ok = InputSources.select(InputSources.ogID)
         keyLog.info("보안 입력 뒤 순정에 남음 → OG키보드로 되돌림 \(ok ? "성공" : "실패", privacy: .public)")
         if ok { ModeIndicator.shared.show(hangul: ModeState.hangul) }
